@@ -55,9 +55,12 @@ REM**CMRI PROGRAM USING CALL STATEMENTS** Apr 2005 JMJ, modified Oct-14-2008, FE
 ' 22-Oct-2020 added SIGL(31) & SIGR(30), added monitor for loop time
 ' 11-DEC-2020 added grad crossing control logic
 ' 26-JAN-2021 option to have or void aproach lighting. often useful in testing
+' 3-May-2021 added indicator Latonia pane4l to monitor SW(55)
+' 10-August-2021 changed software to meet changes in DeCoursey  yard
+' 11-Oct-2021 added kill relays to DeCoursey yard Relay(1-7)
 
 REM**GLOBALIZE SERIAL PROTOCOL HANDLING VARIABLES
-   DIM SHARED OB(60), IB(60), CT(15), TB(80), CLOR(170)
+   DIM SHARED OB(60), IB(60), CT(15), TB(80), CLOR(173), Relay(10)
    COMMON SHARED UA, COMPORT, BAUD100, NDP$, DL, NS, NI, NO, MAXTRIES
    COMMON SHARED INBYTE, ABORTIN, INTRIES, INITERR, PA, LM, MT
 REM**GLOBALIZE CONSTANTS FOR PACKING AND UNPACKING I/O BYTES
@@ -72,13 +75,13 @@ REM** GLOBALIZE TIMER VARIABLES
      COMMON SHARED Start!, Finish!, Report$, Diagnose$, Signal$
      COMMON SHARED Hours, Mins, Seconds!, Ratio, StartFC!, FinishFC!, T1SAVE&
      COMMON SHARED VERSION$
-     VERSION$ = "V20210126"
+     VERSION$ = "V 2021-10-11"
      
 
 REM** DIMENSION RAILROAD DEVICES
-     DIM SHARED CTCSWL(30), CTCSGLN(30), CTCSGLS(30), CTCPB(30), CTCLEDSW(30), CTCLEDSIG(30), SM(150), SMFBN(150), SMFBR(150), BLK(170), SMFBT(20), SIGR(68), SIGL(68)
+     DIM SHARED CTCSWL(30), CTCSGLN(30), CTCSGLS(30), CTCPB(30), CTCLEDSW(30), CTCLEDSIG(30), SM(150), SMFBN(150), SMFBR(150), BLK(175), SMFBT(20), SIGR(68), SIGL(68)
      DIM SHARED SM$(180), SMFB$(180), CTCSWL$(30), CTCLEDSW$(30), CTCSIGL$(30), CTCLEDSIG$(30), CTCPB$(30), BLK$(170), SIGN$(30), SIGS$(30), SIGR$(68), SIGL$(68), CrossBuck(10), Bell(10)
-     DIM SHARED PB(50), LED(150), SWITCHN(150), SWITCHREV(150), KEYSWITCH(150), INHAND(150), NHAND(150), Light(150), TD(150), UL(150)
+     DIM SHARED PB(50), LED(250), SWITCHN(150), SWITCHREV(150), KEYSWITCH(150), INHAND(150), NHAND(150), Light(150), TD(150), UL(150), TRACKNORTH(10), TRACKSOUTH(10)
      
      REM**INITIALIZE CONSTANTS FOR PACKING AND UNPACKING I/O BYTES
      B0 = 1: B1 = 2: B2 = 4: B3 = 8: B4 = 16: B5 = 32: B6 = 64: B7 = 128
@@ -172,14 +175,13 @@ SIG28L: ' N Campbellsburg Tripple Head
         SIGL(28) = REDREDREDB
         IF SMFBN(27) = TUN THEN
          IF SMFBN(25) = TUN THEN
-          IF BLK(74) + BLK(75) + BLK(77) + BLK(78) + BLK(79) <> 0 THEN GOTO SIG29L
+          IF BLK(74) + BLK(75) + BLK(77) <> 0 THEN GOTO SIG29L
             IF SIGL(24) <> REDREDB THEN SIGL(28) = GRNREDREDB ELSE SIGL(28) = YELREDREDB
          ELSE
-            IF BLK(74) + BLK(76) + BLK(77) <> 0 THEN GOTO SIG29L
+            IF BLK(74) + BLK(75) + BLK(77) <> 0 THEN GOTO SIG29L
             IF SIGL(22) <> REDB THEN SIGL(28) = REDREDFYELB ELSE SIGL(28) = REDREDYELB
             ' logic to add flashing yellow, greem not available
          END IF
-
         ELSE
           IF BLK(74) + BLK(76) <> 0 THEN GOTO SIG29L
           IF SIGL(20) <> REDB THEN SIGL(28) = REDGRNREDB ELSE SIGL(28) = REDYELREDB
@@ -188,7 +190,7 @@ SIG28L: ' N Campbellsburg Tripple Head
 SIG29L: ' DWARF PROTECTING CRR
        SIGL(29) = REDB
         IF SMFBN(31) = TUN THEN
-         IF BLK(57) + BLK(60) + BLK(65) + BLK(64) > 0 GOTO SIG30L
+         IF BLK(57) + BLK(60) + BLK(64) + BLK(65) + BLK(67) > 0 GOTO SIG30L
          SIGL(29) = GRNB
         ELSE
          SIGL(29) = REDB
@@ -206,7 +208,7 @@ SIG30L: ' S Worthville SIGL(30) DOUBLE HEAD
            SIGL(30) = REDREDB
          END IF
        ELSE
-         IF BLK(59) + BLK(60) + BLK(65) + BLK(66) + BLK(64) > 0 GOTO SIG31L
+         IF BLK(59) + BLK(60) + BLK(64) + BLK(65) + BLK(67) > 0 GOTO SIG31L
          SIGL(30) = REDGRNB
        END IF
 
@@ -230,11 +232,22 @@ SIG34L:
       ' N Worthville signal bridge siding (left track) 10/31/2018
         SIGL(34) = REDRED
         IF SMFBN(33) = TUN THEN
-          IF BLK(53) + BLK(54) <> 0 THEN GOTO SIG38L
+          IF BLK(53) + BLK(54) <> 0 THEN GOTO SIG36L
           IF SIGL(31) = (YELB OR GRNB) THEN SIGL(34) = GRNRED ELSE SIGL(34) = YELRED
         ELSE
-          IF BLK(53) + BLK(58) + BLK(55) <> 0 THEN GOTO SIG38L
+          IF BLK(53) + BLK(58) + BLK(55) <> 0 THEN GOTO SIG36L
           IF SIGL(30) <> (REDB OR FREDB) THEN SIGL(34) = REDGRN ELSE SIGL(34) = REDYEL
+        END IF
+
+SIG36L:
+        '18-MAY 2021
+        SIGL(36) = REDREDB
+        IF SMFBN(35) = TUN THEN
+          IF BLK(52) <> 0 THEN GOTO SIG38L
+          IF SIGL(32) <> REDRED THEN SIGL(36) = GRNREDB ELSE SIGL(36) = YELREDB
+        ELSE
+          IF BLK(52) + BLK(56) <> 0 THEN GOTO SIG38L
+          IF SIGL(29) <> REDB THEN SIGL(36) = REDGRNB ELSE SIGL(36) = REDYELB
         END IF
 
 SIG38L: ' N Worthville double head signal
@@ -406,19 +419,18 @@ SIG57L: ' dwarf N main
         END IF
 
 SIG58L: ' Latonia crossover double head
-
         SIGL(58) = REDREDB
         IF SMFBN(59) = TUN THEN
           IF BLK(21) + BLK(22) <> 0 THEN GOTO SIG60L
           IF SIGL(57) <> REDB THEN SIGL(58) = GRNREDB ELSE SIGL(58) = YELREDB
         ELSE
-          IF BLK(20) + BLK(21) + BLK(23) <> 0 THEN GOTO SIG58R
+          IF BLK(20) + BLK(21) + BLK(23) <> 0 THEN GOTO SIG60L
           IF SIGL(56) <> REDB THEN SIGL(58) = REDGRNB ELSE SIGL(58) = REDYELB
         END IF
 
-SIG60L:
+SIG60L: ' Latonia crossover dwarf
         SIGL(60) = REDB
-        IF BLK(20) + BLK(23) > 0 GOTO SIG62L
+        IF (BLK(20) + BLK(23)) > 0 GOTO SIG62L
         IF SMFBN(59) = TUN THEN
            IF SIGL(56) <> REDB THEN SIGL(60) = GRNB ELSE SIGL(60) = YELB
         ELSE
@@ -438,10 +450,25 @@ SIG62L:  ' DOUBLE HEAD N LATONIA
 SIG64L:
 
 '********************* RIGHT *** NORTHBOUND *******************************
-SIG64R: 'DeCoursey crossover double head
+SIG65R: ' DeCoursey crossover single head 1/28/21
+         LOCATE 12, 1
+         SIGR(65) = REDB
+         IF SMFBN(67) = TUN THEN
+           IF (BLK(16) + BLK(13)) > 0 GOTO SIG64R
+           SIGR(65) = YELB
+         END IF
+
+SIG64R: 'DeCoursey crossover double(64) head 1/28/21
+         SIGR(64) = REDREDB
+         IF SMFBN(67) = TUN THEN
+           IF (BLK(15) + BLK(14)) > 0 GOTO SIG62R
+           SIGR(64) = YELREDB
+         ELSE
+           IF (BLK(15) + BLK(16) + BLK(13)) > 0 GOTO SIG62R
+           SIGR(64) = REDYELB
+         END IF
 
 SIG62R: 'N LATONIA
-
         SIGR(62) = REDB: SIGR(63) = REDB
         IF BLK(170) + BLK(18) > 0 GOTO SIG61R
         IF SMFBN(65) = TUN THEN
@@ -460,18 +487,13 @@ SIG61R: ' Yard Shortcut
          END IF
 
 SIG60R: ' Latonia crossover double head
-        SIGR(60) = 36: 'REDREDB
+        SIGR(60) = REDREDB
         IF SMFBN(59) = TUN THEN
-          IF BLK(20) + BLK(169) <> 0 THEN GOTO SIG58R
+          IF (BLK(20) + BLK(169)) > 0 THEN GOTO SIG58R
           IF SMFBN(63) <> TUN THEN GOTO SIG58R
           IF SIGR(62) <> REDB THEN SIGR(60) = GRNREDB ELSE SIGR(60) = YELREDB
         ELSE
-          IF BLK(20) > 0 THEN BEEP: GOTO SIG58R
-          IF BLK(21) > 0 THEN BEEP: GOTO SIG58R
-          IF BLK(168) > 0 THEN BEEP: GOTO SIG58R
-          IF BLK(19) > 0 THEN BEEP: GOTO SIG58R
-          '
-          IF (BLK(20) + BLK(21) + BLK(168) + BLK(19) > 0) THEN GOTO SIG58R
+          IF (BLK(20) = OCC) OR (BLK(21) = OCC) OR (BLK(168) = OCC) OR (BLK(19) = OCC) THEN GOTO SIG58R
           IF SIGR(64) <> REDREDB THEN SIGR(60) = REDGRNB ELSE SIGR(60) = REDYELB
         END IF
 
@@ -480,12 +502,11 @@ SIG58R: ' S Latonia  crossover
         IF BLK(21) + BLK(19) + BLK(70) > 0 GOTO SIG56R
         IF SMFBN(59) = TUN THEN
            IF SIGR(64) <> REDREDB THEN SIGR(58) = GRNB ELSE SIGR(58) = YELB
-        ELSE
-           SIGR(58) = REDB
         END IF
                           
 
 SIG56R: ' TRIPLE HEAD S LATONIA
+        IF SMFBN(55) = 1 THEN LED(55) = TUN ELSE LED(55) = TUR: ' for control panel Latonia
         SIGR(56) = REDREDREDB
         IF SMFBN(55) = TUN THEN
           IF BLK(25) + BLK(22) + BLK(21) <> 0 THEN GOTO SIG54R
@@ -566,7 +587,6 @@ SIG40R: ' S Sparta triple head  12-17-2019
         END IF
 
 SIG38R: ' N Worthville tall & dwarf
-        'LOCATE 3, 10: PRINT "SIGR(42) is"; : PRINT SIGR(42)
         SIGR(38) = REDB: SIGR(39) = REDB
         IF BLK(45) + BLK(49) > 0 GOTO SIG36R
         IF SMFBN(37) = TUN THEN
@@ -619,7 +639,7 @@ SIG30R: 'S Worthville double head 21-June-2019
            IF BLK(62) + BLK(59) + BLK(55) <> 0 THEN GOTO SIG28R
            IF SIGR(32) <> REDREDB THEN SIGR(30) = GRNREDB ELSE SIGR(30) = YELREDB
           ELSE
-                SIGR(30) = REDREDB: GOTO SIG28R
+           SIGR(30) = REDREDB: GOTO SIG28R
           END IF
         ELSE
           IF BLK(62) + BLK(61) + BLK(54) <> 0 THEN GOTO SIG28R
@@ -632,7 +652,7 @@ SIG10R:
         ' Worthville Dwarf CRR must be renumbered to SIG30R when others renumbered
         SIGR(10) = REDB
         IF SMFBN(31) = TUN THEN
-         IF BLK(67) + BLK(66) + BLK(60) + BLK(57) + BLK(56) > 0 THEN GOTO SIG8R
+         IF BLK(67) + BLK(60) + BLK(56) > 0 THEN GOTO SIG8R
          IF SIGR(36) <> REDB THEN SIGR(10) = GRNB ELSE SIGR(10) = YELB
         ELSE
          IF BLK(67) + BLK(60) + BLK(59) + BLK(55) > 0 THEN GOTO SIG8R
@@ -642,11 +662,12 @@ SIG10R:
 SIG8R:
 IF Signal$ = "N" GOTO 777
 '************************ APROACH LIGHTING *************************
-        IF BLK(73) + BLK(67) + BLK(64) + BLK(63) + BLK(62) + BLK(61) + BLK(59) = 0 THEN SIGR(30) = DRK: SIGR(10) = DRK
+        IF BLK(74) + BLK(73) + BLK(67) + BLK(64) + BLK(63) + BLK(62) + BLK(61) + BLK(60) + BLK(59) = 0 THEN SIGR(30) = DRK: SIGR(10) = DRK
         IF BLK(51) + BLK(52) + BLK(53) + BLK(54) + BLK(55) + BLK(56) + BLK(57) + BLK(58) + BLK(59) + BLK(61) + BLK(62) = 0 THEN SIGL(30) = DRK: SIGL(31) = DRK: SIGL(29) = DRK
-        IF BLK(45) + BLK(49) + BLK(50) + BLK(51) + BLK(52) + BLK(53) + BLK(58) = 0 THEN SIGL(32) = DRK: SIGL(34) = DRK
-        IF BLK(53) + BLK(54) + BLK(55) + BLK(58) + BLK(59) + BLK(60) + BLK(61) + BLK(62) + BLK(63) + BLK(64) + BLK(67) = 0 THEN SIGR(32) = DRK: SIGR(34) = DRK
+        IF BLK(45) + BLK(49) + BLK(50) + BLK(51) + BLK(52) + BLK(53) + BLK(56) + BLK(58) = 0 THEN SIGL(32) = DRK: SIGL(34) = DRK: SIGL(36) = DRK
+        IF BLK(53) + BLK(54) + BLK(55) + BLK(56) + BLK(58) + BLK(59) + BLK(60) + BLK(61) + BLK(62) + BLK(63) + BLK(64) + BLK(67) = 0 THEN SIGR(32) = DRK: SIGR(34) = DRK: SIGR(36) = DRK
         IF BLK(49) + BLK(50) + BLK(51) + BLK(52) + BLK(53) + BLK(54) + BLK(55) + BLK(58) + BLK(60) = 0 THEN SIGR(38) = DRK: SIGR(39) = DRK
+        
         IF BLK(44) + BLK(45) + BLK(49) = 0 THEN SIGL(38) = DRK
         IF BLK(37) + BLK(38) + BLK(39) + BLK(40) + BLK(41) + BLK(42) + BLK(43) + BLK(44) + BLK(45) = 0 THEN SIGL(40) = DRK: SIGL(41) = DRK: SIGL(42) = DRK
         IF BLK(37) + BLK(38) + BLK(39) + BLK(40) + BLK(41) + BLK(42) + BLK(43) + BLK(44) = 0 THEN SIGR(42) = DRK: SIGR(44) = DRK: SIGR(46) = DRK
@@ -656,12 +677,12 @@ IF Signal$ = "N" GOTO 777
         IF BLK(33) + BLK(32) = 0 THEN SIGR(48) = DRK
         IF BLK(26) + BLK(27) = 0 THEN SIGL(54) = DRK
         IF BLK(26) + BLK(29) + BLK(28) = 0 THEN SIGR(54) = DRK: SIGR(55) = DRK
-        IF BLK(27) + BLK(25) + BLK(24) = 0 THEN SIGR(56) = DRK
+        IF BLK(27) + BLK(26) + BLK(25) + BLK(24) = 0 THEN SIGR(56) = DRK
         IF BLK(169) + BLK(170) + BLK(19) + BLK(20) + BLK(21) + BLK(22) + BLK(23) + BLK(24) + BLK(25) = 0 THEN SIGL(56) = DRK: SIGL(57) = DRK
         IF BLK(20) + BLK(21) + BLK(22) + BLK(23) + BLK(24) + BLK(25) + BLK(27) = 0 THEN SIGR(58) = DRK: SIGR(60) = DRK
         IF BLK(18) + BLK(19) + BLK(20) + BLK(21) + BLK(169) + BLK(170) = 0 THEN SIGL(58) = DRK: SIGL(60) = DRK
         IF BLK(19) + BLK(169) + BLK(170) = 0 AND SMFBN(65) = 1 THEN SIGR(62) = DRK: SIGR(63) = DRK
-        IF BLK(168) + BLK(18) + BLK(16) = 0 THEN SIGL(62) = DRK
+        IF BLK(15) + BLK(16) + BLK(18) + BLK(19) + BLK(170) = 0 THEN SIGL(62) = DRK
 777
 
 END SUB
@@ -699,7 +720,7 @@ IF Finish! - Start! > 46 THEN Start! = TIMER: GOTO LastReport
 DeCoursey:
 IF Report$ <> "DeCoursey" THEN CLS : CALL HEADER: Report$ = "DeCoursey"
 
-LOCATE 5, 27: PRINT "DeCoursey Yard"
+LOCATE 5, 17: PRINT "DeCoursey Yard"
 FOR I = 1 TO 17
  IF BLK(I) = 1 THEN
   CLOR(I) = 4
@@ -708,39 +729,68 @@ FOR I = 1 TO 17
  END IF
 NEXT I
 
-LOCATE 7, 1: COLOR CLOR(1), 0: PRINT "South Main to CRR   "
-LOCATE 8, 1: COLOR CLOR(2), 0: PRINT "South Yard Throat   "
-LOCATE 9, 1: COLOR CLOR(4), 0: PRINT "Yard Track #1       "
-LOCATE 10, 1: COLOR CLOR(5), 0: PRINT "Yard Track #2       "
-LOCATE 11, 1: COLOR CLOR(6), 0: PRINT "Yard Track #3       "
-LOCATE 12, 1: COLOR CLOR(7), 0: PRINT "Yard Track #4       "
-LOCATE 13, 1: COLOR CLOR(8), 0: PRINT "Yard Track #5       "
-LOCATE 14, 1: COLOR CLOR(9), 0: PRINT "Yard Track #6       "
-LOCATE 15, 1: COLOR CLOR(10), 0: PRINT "Yard Track #7       "
-LOCATE 16, 1: COLOR CLOR(11), 0: PRINT "North Yard Throat   "
-LOCATE 17, 1: COLOR CLOR(13), 0: PRINT "North Siding        "
-LOCATE 18, 1: COLOR CLOR(14), 0: PRINT "North Main          "
-LOCATE 19, 1: COLOR CLOR(17), 0: PRINT "SW #67 X/O Main N   "
-LOCATE 20, 1: COLOR CLOR(16), 0: PRINT "SW #67 X/O Main S   "
+FOR I = 171 TO 173
+ IF BLK(I) = 1 THEN
+  CLOR(I) = 4
+ ELSE
+  CLOR(I) = 7
+ END IF
+NEXT I
 
-IF SMFBN(67) = 1 THEN
- SMFB$(67) = "N":
- CLOR(67) = 7
-ELSE
- SMFB$(67) = "R":
- CLOR(67) = 4
-END IF
-LOCATE 19, 20: COLOR CLOR(67), 0: : PRINT SMFB$(67)
-LOCATE 20, 20: COLOR CLOR(67), 0: : PRINT SMFB$(67)
+LOCATE 7, 1: COLOR CLOR(1), 0: PRINT "South Main to CRR   "
+LOCATE 8, 1: COLOR CLOR(171), 0: PRINT "SW #71 Interlock     "
+LOCATE 9, 1: COLOR CLOR(2), 0: PRINT "South Yard Throat   "
+LOCATE 10, 1: COLOR CLOR(3), 0: PRINT "Bypass Track        "
+LOCATE 11, 1: COLOR CLOR(4), 0: PRINT "Yard Track #1       "
+LOCATE 12, 1: COLOR CLOR(5), 0: PRINT "Yard Track #2       "
+LOCATE 13, 1: COLOR CLOR(6), 0: PRINT "Yard Track #3       "
+LOCATE 14, 1: COLOR CLOR(7), 0: PRINT "Yard Track #4       "
+LOCATE 15, 1: COLOR CLOR(8), 0: PRINT "Yard Track #5       "
+LOCATE 16, 1: COLOR CLOR(9), 0: PRINT "Yard Track #6       "
+LOCATE 17, 1: COLOR CLOR(10), 0: PRINT "Yard Track #7       "
+LOCATE 18, 1: COLOR CLOR(11), 0: PRINT "North Yard Throat   "
+
+LOCATE 7, 35: COLOR CLOR(173), 0: PRINT "SW #69 X/O Main N   "
+LOCATE 8, 35: COLOR CLOR(15), 0: PRINT "SW #69 X/O Main S   "
+LOCATE 9, 35: COLOR CLOR(13), 0: PRINT "North Left Hand Main"
+LOCATE 10, 35: COLOR CLOR(14), 0: PRINT "North Right Hand Main"
+LOCATE 11, 35: COLOR CLOR(17), 0: PRINT "SW #67 X/O Main N    "
+LOCATE 12, 35: COLOR CLOR(16), 0: PRINT "SW #67 X/O Main S    "
+
+FOR I = 67 TO 71 STEP 2
+ IF SMFBN(I) = 1 THEN
+  SMFB$(I) = "N":
+  CLOR(I) = 7
+ ELSE
+  SMFB$(I) = "R":
+  CLOR(I) = 4
+ END IF
+NEXT I
+
+LOCATE 8, 20: COLOR CLOR(71), 0: PRINT SMFB$(71)
+LOCATE 7, 58: COLOR CLOR(69), 0: PRINT SMFB$(69)
+LOCATE 8, 58: COLOR CLOR(69), 0: PRINT SMFB$(69)
+LOCATE 11, 58: COLOR CLOR(67), 0: PRINT SMFB$(67)
+LOCATE 12, 58: COLOR CLOR(67), 0: PRINT SMFB$(67)
  COLOR 7, 0
 
-FOR I = 101 TO 110
-        IF SMFBN(I) = 1 THEN SMFB$(I) = "N": CLOR(I) = 7
-        IF SMFBR(I) = 1 THEN SMFB$(I) = "R": CLOR(I) = 4
-        IF SMFBN(I + 10) = 1 THEN SMFB$(I + 10) = "N": CLOR(I + 10) = 7
-        IF SMFBR(I + 10) = 1 THEN SMFB$(I + 10) = "R": CLOR(I + 10) = 4
-        LOCATE I - 94, 23:  COLOR CLOR(I), 0: PRINT "SWITCH #"; I; : PRINT SMFB$(I)
-        LOCATE I - 94, 40:  COLOR CLOR(I + 10), 0: PRINT "SWITCH #"; (I + 10); : PRINT SMFB$(I + 10)
+FOR I = 1 TO 7
+    IF TRACKSOUTH(I) = 1 THEN
+     CLOR(I) = 2
+     LOCATE I + 10, 1
+     COLOR CLOR(I), 0
+     PRINT "S Yard Track#"; : PRINT I
+     CLOR(I) = 7
+    END IF
+
+    IF TRACKNORTH(I) = 1 THEN
+     CLOR(I) = 2
+     LOCATE I + 10, 1
+     COLOR CLOR(I), 0
+     PRINT "N Yard Track#"; : PRINT I
+     CLOR(I) = 7
+    END IF
+
 NEXT I
 
 FOR I = 0 TO 16
@@ -797,12 +847,12 @@ ELSE
 END IF
 NEXT I
 
-LOCATE 9, 20: COLOR CLOR(65), o: PRINT SMFB$(65)
-LOCATE 10, 20: COLOR CLOR(63), o: PRINT SMFB$(63)
-LOCATE 11, 20: COLOR CLOR(61), o: PRINT SMFB$(61)
-LOCATE 12, 20: COLOR CLOR(59), o: PRINT SMFB$(59)
-LOCATE 16, 20: COLOR CLOR(57), o: PRINT SMFB$(57)
-LOCATE 17, 20: COLOR CLOR(55), o: PRINT SMFB$(55)
+LOCATE 9, 20: COLOR CLOR(65), O: PRINT SMFB$(65)
+LOCATE 10, 20: COLOR CLOR(63), O: PRINT SMFB$(63)
+LOCATE 11, 20: COLOR CLOR(61), O: PRINT SMFB$(61)
+LOCATE 12, 20: COLOR CLOR(59), O: PRINT SMFB$(59)
+LOCATE 16, 20: COLOR CLOR(57), O: PRINT SMFB$(57)
+LOCATE 17, 20: COLOR CLOR(55), O: PRINT SMFB$(55)
 
 FOR I = 22 TO 36
         IF PB(I) = 1 THEN
@@ -830,15 +880,15 @@ FOR I = 26 TO 34
  END IF
 NEXT I
 
-LOCATE 7, 25: COLOR CLOR(27), o: PRINT "North Main          "
-LOCATE 8, 25: COLOR CLOR(26), o: PRINT "SW #53 Interlock    "
-LOCATE 9, 25: COLOR CLOR(29), o: PRINT "Main                "
-LOCATE 10, 25: COLOR CLOR(30), o: PRINT "SW #51 Interlock    "
-LOCATE 11, 25: COLOR CLOR(28), o: PRINT "Siding west         "
-LOCATE 12, 25: COLOR CLOR(31), o: PRINT "Siding east         "
-LOCATE 13, 25: COLOR CLOR(32), o: PRINT "SW #49 Interlock    "
-LOCATE 14, 25: COLOR CLOR(33), o: PRINT "SW #47 Interlock    "
-LOCATE 15, 25: COLOR CLOR(34), o: PRINT "South Main          "
+LOCATE 7, 25: COLOR CLOR(27), O: PRINT "North Main          "
+LOCATE 8, 25: COLOR CLOR(26), O: PRINT "SW #53 Interlock    "
+LOCATE 9, 25: COLOR CLOR(29), O: PRINT "Main                "
+LOCATE 10, 25: COLOR CLOR(30), O: PRINT "SW #51 Interlock    "
+LOCATE 11, 25: COLOR CLOR(28), O: PRINT "Siding west         "
+LOCATE 12, 25: COLOR CLOR(31), O: PRINT "Siding east         "
+LOCATE 13, 25: COLOR CLOR(32), O: PRINT "SW #49 Interlock    "
+LOCATE 14, 25: COLOR CLOR(33), O: PRINT "SW #47 Interlock    "
+LOCATE 15, 25: COLOR CLOR(34), O: PRINT "South Main          "
 
 FOR I = 47 TO 53 STEP 2
 IF SMFBN(I) = 1 THEN
@@ -850,10 +900,10 @@ ELSE
 END IF
 NEXT I
 
-LOCATE 8, 45: COLOR CLOR(53), o: PRINT SMFB$(53)
-LOCATE 10, 45: COLOR CLOR(51), o: PRINT SMFB$(51)
-LOCATE 13, 45: COLOR CLOR(49), o: PRINT SMFB$(49)
-LOCATE 14, 45: COLOR CLOR(47), o: PRINT SMFB$(47)
+LOCATE 8, 45: COLOR CLOR(53), O: PRINT SMFB$(53)
+LOCATE 10, 45: COLOR CLOR(51), O: PRINT SMFB$(51)
+LOCATE 13, 45: COLOR CLOR(49), O: PRINT SMFB$(49)
+LOCATE 14, 45: COLOR CLOR(47), O: PRINT SMFB$(47)
 
 COLOR 7, 0
 Finish! = TIMER
@@ -871,7 +921,7 @@ FOR I = 34 TO 45
  END IF
 NEXT I
 
-LOCATE 7, 50: COLOR CLOR(34), o: PRINT "North Main          "
+LOCATE 7, 50: COLOR CLOR(34), O: PRINT "North Main          "
 LOCATE 8, 50: COLOR CLOR(37), 0: PRINT "SW #45 Interlock    "
 LOCATE 9, 50: COLOR CLOR(38), 0: PRINT "SW #43 Interlock    "
 LOCATE 10, 50: COLOR CLOR(39), 0: PRINT "Main                "
@@ -914,20 +964,20 @@ FOR I = 45 TO 73
  END IF
 NEXT I
 
-LOCATE 7, 1:  COLOR CLOR(45), o: PRINT "North Main          "
-LOCATE 8, 1:  COLOR CLOR(49), o: PRINT "SW #37 Interlock    "
-LOCATE 9, 1:  COLOR CLOR(50), o: PRINT "Main; Blk(50)       "
-LOCATE 10, 1: COLOR CLOR(51), o: PRINT "W Siding; BLK(51)   "
-LOCATE 11, 1: COLOR CLOR(52), o: PRINT "SW #35 Interlock    "
-LOCATE 12, 1: COLOR CLOR(56), o: PRINT "Interchange Siding  "
-LOCATE 13, 1: COLOR CLOR(53), o: PRINT "SW #33 X/O east     "
-LOCATE 14, 1: COLOR CLOR(58), o: PRINT "SW #33 X/O west     "
-LOCATE 15, 1: COLOR CLOR(55), o: PRINT "Mid Main  BLK(55)   "
-LOCATE 16, 1: COLOR CLOR(54), o: PRINT "East Siding         "
-LOCATE 17, 1: COLOR CLOR(59), o: PRINT "SW #31 X/O main     "
-LOCATE 18, 1: COLOR CLOR(60), o: PRINT "SW #31 X/O siding   "
-LOCATE 19, 1: COLOR CLOR(62), o: PRINT "SW #29 Interlock    "
-LOCATE 20, 1: COLOR CLOR(73), o: PRINT "South Main          "
+LOCATE 7, 1:  COLOR CLOR(45), O: PRINT "North Main          "
+LOCATE 8, 1:  COLOR CLOR(49), O: PRINT "SW #37 Interlock    "
+LOCATE 9, 1:  COLOR CLOR(50), O: PRINT "Main; Blk(50)       "
+LOCATE 10, 1: COLOR CLOR(51), O: PRINT "W Siding; BLK(51)   "
+LOCATE 11, 1: COLOR CLOR(52), O: PRINT "SW #35 Interlock    "
+LOCATE 12, 1: COLOR CLOR(56), O: PRINT "Interchange Siding  "
+LOCATE 13, 1: COLOR CLOR(53), O: PRINT "SW #33 X/O east     "
+LOCATE 14, 1: COLOR CLOR(58), O: PRINT "SW #33 X/O west     "
+LOCATE 15, 1: COLOR CLOR(55), O: PRINT "Mid Main  BLK(55)   "
+LOCATE 16, 1: COLOR CLOR(54), O: PRINT "East Siding         "
+LOCATE 17, 1: COLOR CLOR(59), O: PRINT "SW #31 X/O main     "
+LOCATE 18, 1: COLOR CLOR(60), O: PRINT "SW #31 X/O siding   "
+LOCATE 19, 1: COLOR CLOR(62), O: PRINT "SW #29 Interlock    "
+LOCATE 20, 1: COLOR CLOR(73), O: PRINT "South Main          "
 LOCATE 21, 1: COLOR CLOR(69), 0: PRINT "Carrolton RR        "
 
 FOR I = 29 TO 37 STEP 2
@@ -940,13 +990,13 @@ ELSE
 END IF
 NEXT I
 
-LOCATE 8, 20: COLOR CLOR(37), o: PRINT SMFB$(37)
-LOCATE 11, 20: COLOR CLOR(35), o: PRINT SMFB$(35)
-LOCATE 13, 20: COLOR CLOR(33), o: PRINT SMFB$(33)
-LOCATE 14, 20: COLOR CLOR(33), o: PRINT SMFB$(33)
-LOCATE 17, 20: COLOR CLOR(31), o: PRINT SMFB$(31)
-LOCATE 18, 20: COLOR CLOR(31), o: PRINT SMFB$(31)
-LOCATE 19, 20: COLOR CLOR(29), o: PRINT SMFB$(29)
+LOCATE 8, 20: COLOR CLOR(37), 0: PRINT SMFB$(37)
+LOCATE 11, 20: COLOR CLOR(35), 0: PRINT SMFB$(35)
+LOCATE 13, 20: COLOR CLOR(33), 0: PRINT SMFB$(33)
+LOCATE 14, 20: COLOR CLOR(33), 0: PRINT SMFB$(33)
+LOCATE 17, 20: COLOR CLOR(31), 0: PRINT SMFB$(31)
+LOCATE 18, 20: COLOR CLOR(31), 0: PRINT SMFB$(31)
+LOCATE 19, 20: COLOR CLOR(29), 0: PRINT SMFB$(29)
 
 COLOR 7, 0
 Finish! = TIMER
@@ -965,7 +1015,7 @@ FOR I = 73 TO 84
  END IF
 NEXT I
 
-LOCATE 7, 30:  COLOR CLOR(73), o: PRINT "North Main          "
+LOCATE 7, 30:  COLOR CLOR(73), O: PRINT "North Main          "
 LOCATE 8, 30: COLOR CLOR(74), 0: PRINT "SW #27 Interlock    "
 LOCATE 9, 30: COLOR CLOR(75), 0: PRINT "Main N              "
 LOCATE 10, 30: COLOR CLOR(76), 0: PRINT "W Siding            "
@@ -1026,33 +1076,19 @@ REDFRED = 32: REDFRED1 = 36: REDFRED2 = 36
 REDREDFYELB = REDREDYELB: REDREDFYELB1 = 36: REDREDFYELB2 = 36
 
 
-REM ********* Warning if switch motors REV on startup *******************
-
-IF SMFBN(17) <> 1 THEN LED(17) = 1: UL(17) = 1
-IF SMFBN(19) <> 1 THEN LED(19) = 1: UL(19) = 1
-IF SMFBN(21) <> 1 THEN LED(21) = 1: UL(21) = 1
-IF SMFBN(23) <> 1 THEN LED(23) = 1: UL(23) = 1
-IF SMFBN(25) <> 1 THEN LED(25) = 1: UL(25) = 1
-IF SMFBN(27) <> 1 THEN LED(27) = 1: UL(27) = 1
-IF SMFBN(29) <> 1 THEN LED(29) = 1: UL(29) = 1
-IF SMFBN(31) <> 1 THEN LED(31) = 1: UL(31) = 1
-IF SMFBN(33) <> 1 THEN LED(33) = 1: UL(33) = 1
-IF SMFBN(35) <> 1 THEN LED(35) = 1: UL(35) = 1
-IF SMFBN(37) <> 1 THEN LED(37) = 1: UL(37) = 1
-IF SMFBN(39) <> 1 THEN LED(39) = 1: UL(39) = 1
-IF SMFBN(41) <> 1 THEN LED(41) = 1: UL(41) = 1
-IF SMFBN(43) <> 1 THEN LED(43) = 1: UL(43) = 1
-IF SMFBN(45) <> 1 THEN LED(45) = 1: UL(45) = 1
-IF SMFBN(47) <> 1 THEN LED(47) = 1: UL(47) = 1
-IF SMFBN(49) <> 1 THEN LED(49) = 1: UL(49) = 1
-IF SMFBN(51) <> 1 THEN LED(51) = 1: UL(51) = 1
-IF SMFBN(53) <> 1 THEN LED(53) = 1: UL(53) = 1
-IF SMFBN(59) <> 1 THEN LED(59) = 1: UL(59) = 1
-IF SMFBN(67) <> 1 THEN LED(67) = 1: UL(67) = 1
+REM ********* Warning if switch motors are REV on startup *******************
+CALL READRR
+FOR I = 17 TO 67 STEP 2
+   IF SWITCHREV(I) = 1 THEN
+    LED(I) = 1: UL(I) = 1
+    SM(I) = TUR
+   ELSE
+    LED(I) = 0: UL(I) = 0
+    SM(I) = TUN
+   END IF
+NEXT I
 
 CALL WRITERR
-
-CALL READRR
 
 REM ************* GET TIME FOR FAST CLOCK ***************************
 T$ = TIME$: ' real time
@@ -1094,133 +1130,123 @@ REM **************** DeCoursey Yard **********************
 FOR I = 0 TO 16
  IF PB(I) <> 0 THEN
    PB = I
-   PB# = I
+   LOCATE 5, 65: PRINT "PUSH BUTTON "; : PRINT I
    GOTO AlignSwitchDeC
  END IF
 NEXT I
 ' Aligns switches acording to pushbuttons pressed as read above
 AlignSwitchDeC:
 SELECT CASE PB
-       CASE 0: 'South Main to EK
-        SM(108) = TUN
-        SM(111) = TUN
-       CASE 1: ' North Siding to Latonia
-        IF BLK(15) <> OCC THEN
+       CASE 0: 'South Main to Carrolton RR
+       IF BLK(2) <> OCC THEN
+        IF BLK(171) <> OCC THEN
+         SM(108) = TUN
+         SM(111) = TUN
+         SM(71) = TUR
+        END IF
+       END IF
+       CASE 1: ' Main South RH to Latonia
+        IF BLK(15) + BLK(173) < OCC THEN
          SM(101) = TUN
          SM(105) = TUN
          SM(69) = TUN
-         PB# = 1
         END IF
-       CASE 2: ' North Main around Latonia
-        IF BLK(15) <> OCC THEN
+       CASE 2: ' Main North LH around Latonia
+        IF BLK(15) + BLK(173) < OCC THEN
          SM(101) = TUN
          SM(105) = TUN
          SM(69) = TUR
-         PB# = 2
         END IF
-       CASE 3: ' DeCoursey South #1
+       CASE 3: ' DeCoursey North #7
         IF BLK(11) <> OCC THEN
          SM(101) = TUN
          SM(105) = TUR
          SM(106) = TUN
-         SM(107) = TUN
-         PB# = 3
+         SM(111) = TUN
         END IF
-       CASE 4: ' DeCoursey South #2
-        IF BLK(11) <> OCC THEN
-         SM(101) = TUN
-         SM(105) = TUR
-         SM(106) = TUN
-         SM(107) = TUR
-         PB# = 4
-        END IF
-       CASE 5: ' DeCoursey South #3
+       CASE 4: ' DeCoursey North #6
         IF BLK(11) <> OCC THEN
          SM(101) = TUN
          SM(105) = TUR
          SM(106) = TUR
-         PB# = 5
-        END IF
-       CASE 6: ' DeCoursey South #4
+         SM(107) = TUN
+         END IF
+       CASE 5: ' DeCoursey North #5
+        IF BLK(11) <> OCC THEN
+         SM(101) = TUN
+         SM(105) = TUR
+         SM(106) = TUR
+         SM(107) = TUR
+         END IF
+       CASE 6: ' DeCoursey North #4
         IF BLK(11) <> OCC THEN
          SM(101) = TUR
          SM(102) = TUN
          SM(104) = TUN
-         PB# = 6
-        END IF
-       CASE 7: ' DeCoursey South #5
+         END IF
+       CASE 7: ' DeCoursey North #3
         IF BLK(11) <> OCC THEN
          SM(101) = TUR
          SM(102) = TUN
          SM(104) = TUR
-         PB# = 7
         END IF
-       CASE 8: ' DeCoursey South #6
+       CASE 8: ' DeCoursey North #2
         IF BLK(11) <> OCC THEN
          SM(101) = TUR
          SM(102) = TUR
          SM(103) = TUN
-         PB# = 8
         END IF
-       CASE 9: ' DeCoursey South #7
+       CASE 9: ' DeCoursey North #1
         IF BLK(11) <> OCC THEN
          SM(101) = TUR
          SM(102) = TUR
          SM(103) = TUR
-         PB# = 9
         END IF
-       CASE 10: ' DeCoursey North #1
+       CASE 10: ' DeCoursey South #1
         IF BLK(2) <> OCC THEN
          SM(108) = TUR
          SM(109) = TUR
-         PB# = 10
-        END IF
-       CASE 11: ' DeCoursey North #2
-        IF BLK(2) <> OCC THEN
-         SM(108) = TUR
-         SM(109) = TUN
          SM(110) = TUR
-         PB# = 11
         END IF
-       CASE 12: ' DeCoursey North #3
+       CASE 11: ' DeCoursey South #2
+        IF BLK(2) <> OCC THEN
+         SM(108) = TUR
+         SM(109) = TUR
+         SM(110) = TUN
+        END IF
+       CASE 12: ' DeCoursey South #3
         IF BLK(2) <> OCC THEN
          SM(108) = TUR
          SM(109) = TUN
-         SM(110) = TUN
-         PB# = 12
         END IF
-       CASE 13: ' DeCoursey North #4
+       CASE 13: ' DeCoursey South #4
         IF BLK(2) <> OCC THEN
          SM(108) = TUN
          SM(111) = TUR
          SM(112) = TUR
-         PB# = 13
         END IF
-       CASE 14: ' DeCoursey North #5
+       CASE 14: ' DeCoursey South #5
         IF BLK(2) <> OCC THEN
          SM(108) = TUN
          SM(111) = TUR
          SM(112) = TUN
          SM(113) = TUR
-         PB# = 14
         END IF
-       CASE 15: ' DeCoursey North #6
+       CASE 15: ' DeCoursey South #6
         IF BLK(2) <> OCC THEN
          SM(108) = TUN
          SM(111) = TUR
          SM(112) = TUN
          SM(113) = TUN
          SM(114) = TUR
-         PB# = 15
         END IF
-       CASE 16: ' DeCoursey North #7
+       CASE 16: ' DeCoursey South #7
         IF BLK(2) <> OCC THEN
          SM(108) = TUN
          SM(111) = TUR
          SM(112) = TUN
          SM(113) = TUN
          SM(114) = TUN
-         PB# = 16
         END IF
        CASE ELSE
         'PRINT "ERROR OUT OF RANGE, DeCoursey YARD LADDER SELECTION!": BEEP
@@ -1229,96 +1255,154 @@ SELECT CASE PB
       
 REM **** Logic statements for DeCoursey Yard Control Panel LEDS
 
-        IF BLK(1) = OCC THEN LED(121) = 1 ELSE LED(121) = 0
+        IF BLK(1) + BLK(65) + BLK(68) >= OCC THEN LED(121) = 1 ELSE LED(121) = 0
         IF BLK(2) = OCC THEN LED(120) = 1 ELSE LED(120) = 0
 
-        IF BLK(11) = OCC THEN LED(69) = 1 ELSE LED(69) = 0
+        IF BLK(11) = OCC THEN LED(119) = 1 ELSE LED(119) = 0
         ' BLK(12) is approach to crossing. This energizes a relay as appropriate to change polarity of crossing.
+
+        ' Switch 69
         LED(117) = 0: LED(118) = 0
         IF SMFBN(69) = 1 THEN LED(117) = FGRN ELSE LED(118) = FGRN
         IF BLK(13) = OCC THEN LED(118) = 1
         IF BLK(14) = OCC THEN LED(117) = 1
-        ' Switch 69
-        IF BLK(15) = OCC THEN
-         LED(118) = 1
-         LED(117) = 1
+        IF BLK(15) = OCC THEN LED(117) = 1
+        IF BLK(173) = OCC THEN LED(118) = 1
+        
+' Auto Correct logic to be removed once DS has control of this section of track
+'        IF BLK(13) = OCC THEN
+'          SM(69) = TUN
+'          SM(101) = TUN
+'          SM(105) = TUN
+'         ELSE
+'          IF BLK(14) = OCC THEN
+'          SM(69) = TUR
+'          SM(101) = TUN
+'          SM(105) = TUN
+'         END IF
+'        END IF
+
+' Reset all Relays to off
+   FOR J = 1 TO 7
+    Relay(J) = 0
+   NEXT J
+
+' Track #1 N
+       
+        IF TRACKNORTH(1) = 1 THEN
+          Relay(1) = 1
+          IF BLK(4) = 0 THEN LED(107) = GRN ELSE LED(107) = FRED
+         ELSE
+          IF BLK(4) = OCC THEN LED(107) = RED ELSE LED(107) = DRK
         END IF
 
-' Track #1 N & S                                                                                  
-          IF BLK(4) = OCC THEN LED(107) = RED: LED(115) = RED ELSE LED(107) = DRK: LED(115) = DRK
-          IF BLK(4) <> OCC AND SMFBR(101) = 1 AND SMFBR(102) = 1 AND SMFBR(103) = 1 AND PB# = 9 THEN LED(107) = GRN
-          IF BLK(4) <> OCC AND SMFBR(108) = 1 AND SMFBR(109) = 1 AND PB# = 10 THEN LED(115) = GRN
-          IF BLK(4) = OCC AND SMFBR(101) = 1 AND SMFBR(102) = 1 AND SMFBR(103) = 1 AND PB# = 9 THEN LED(107) = FRED
-          IF BLK(4) = OCC AND SMFBR(108) = 1 AND SMFBR(109) = 1 AND PB# = 10 THEN LED(115) = FRED
-' Track #2 N & S
-          IF BLK(5) = OCC THEN LED(106) = RED: LED(114) = RED ELSE LED(106) = DRK: LED(114) = DRK
-          IF BLK(5) <> OCC AND SMFBR(101) = 1 AND SMFBR(102) = 1 AND SMFBN(103) = 1 AND PB# = 8 THEN LED(106) = GRN
-          IF BLK(5) <> OCC AND SMFBR(108) = 1 AND SMFBN(109) = 1 AND SMFBR(110) = 1 AND PB# = 11 THEN LED(114) = GRN
-          IF BLK(5) = OCC AND SMFBR(101) = 1 AND SMFBR(102) = 1 AND SMFBN(103) = 1 AND PB# = 8 THEN LED(106) = FRED
-          IF BLK(5) = OCC AND SMFBR(108) = 1 AND SMFBN(109) = 1 AND SMFBR(110) = 1 AND PB# = 11 THEN LED(114) = FRED
-' Track #3 N & S
-          IF BLK(6) = OCC THEN LED(105) = RED: LED(113) = RED ELSE LED(105) = DRK: LED(113) = DRK
-          IF BLK(6) <> OCC AND SMFBR(101) = 1 AND SMFBN(102) = 1 AND SMFBR(104) = 1 AND PB# = 7 THEN LED(105) = GRN
-          IF BLK(6) <> OCC AND SMFBR(108) = 1 AND SMFBN(109) = 1 AND SMFBN(110) = 1 AND PB# = 12 THEN LED(113) = GRN
-          IF BLK(6) = OCC AND SMFBR(101) = 1 AND SMFBN(102) = 1 AND SMFBR(104) = 1 AND PB# = 7 THEN LED(105) = FRED
-          IF BLK(6) = OCC AND SMFBR(108) = 1 AND SMFBN(109) = 1 AND SMFBN(110) = 1 AND PB# = 12 THEN LED(113) = FRED
-' Track #4 N & S
-          IF BLK(7) = OCC THEN LED(104) = RED: LED(112) = RED ELSE LED(104) = DRK: LED(112) = DRK
-          IF BLK(7) <> OCC AND SMFBR(101) = 1 AND SMFBN(102) = 1 AND SMFBN(104) = 1 AND PB# = 6 THEN LED(104) = GRN
-          IF BLK(7) <> OCC AND SMFBN(108) = 1 AND SMFBR(111) = 1 AND SMFBR(112) = 1 AND PB# = 13 THEN LED(112) = GRN
-          IF BLK(7) = OCC AND SMFBR(101) = 1 AND SMFBN(102) = 1 AND SMFBN(104) = 1 AND PB# = 6 THEN LED(104) = FRED
-          IF BLK(7) = OCC AND SMFBN(108) = 1 AND SMFBR(111) = 1 AND SMFBR(112) = 1 AND PB# = 13 THEN LED(112) = FRED
-' Track #5 N & S
-          IF BLK(8) = OCC THEN LED(103) = RED: LED(111) = RED ELSE LED(103) = DRK: LED(111) = DRK
-          IF BLK(8) <> OCC AND SMFBN(101) = 1 AND SMFBR(105) = 1 AND SMFBR(106) = 1 AND PB# = 5 THEN LED(103) = GRN
-          IF BLK(8) <> OCC AND SMFBN(108) = 1 AND SMFBR(111) = 1 AND SMFBN(112) = 1 AND SMFBR(113) = 1 AND PB# = 14 THEN LED(111) = GRN
-          IF BLK(8) = OCC AND SMFBN(101) = 1 AND SMFBR(105) = 1 AND SMFBR(106) = 1 AND PB# = 5 THEN LED(103) = FRED
-          IF BLK(8) = OCC AND SMFBN(108) = 1 AND SMFBR(111) = 1 AND SMFBN(112) = 1 AND SMFBR(113) = 1 AND PB# = 14 THEN LED(111) = FRED
-' Track #6 N & S
-          IF BLK(9) = OCC THEN LED(102) = RED: LED(110) = RED ELSE LED(102) = DRK: LED(110) = DRK
+' Track #2 N
+        IF TRACKNORTH(2) = 1 THEN
+        Relay(2) = 1
+          IF BLK(5) = 0 THEN LED(106) = GRN ELSE LED(106) = FRED
+         ELSE
+          IF BLK(5) = OCC THEN LED(106) = RED ELSE LED(106) = DRK
+        END IF
 
-          '#6 South
-          IF SMFBN(101) = 1 AND SMFBR(105) = 1 AND SMFBN(106) = 1 AND SMFBR(107) AND PB# = 4 THEN
-           IF BLK(9) = OCC THEN LED(102) = FRED
-           IF BLK(9) <> OCC THEN
-                LED(102) = GRN
-                'there is no need to check facing point Switch #15. IF SMFBR(115) = 1 THEN LED(102) = FGRN
-           END IF
-          END IF
+' Track #3 N
+        IF TRACKNORTH(3) = 1 THEN
+        Relay(3) = 1
+          IF BLK(6) = 0 THEN LED(105) = GRN ELSE LED(105) = FRED
+         ELSE
+          IF BLK(6) = OCC THEN LED(105) = RED ELSE LED(105) = DRK
+        END IF
 
-          '#6 North
-          IF SMFBN(108) = 1 AND SMFBR(111) = 1 AND SMFBN(112) = 1 AND SMFBN(113) AND SMFBR(114) AND PB# = 15 THEN
-           IF BLK(9) = OCC THEN LED(110) = FRED
-           IF BLK(9) <> OCC THEN
-                LED(110) = GRN
-                IF SMFBR(115) = 1 THEN LED(110) = FGRN
-           END IF
-          END IF
+' Track #4 N
+        IF TRACKNORTH(4) = 1 THEN
+          Relay(4) = 1
+          IF BLK(7) = 0 THEN LED(104) = GRN ELSE LED(104) = FRED
+         ELSE
+          IF BLK(7) = OCC THEN LED(104) = RED ELSE LED(104) = DRK
+        END IF
 
-' Track #7 N & S
-          IF BLK(10) = OCC THEN LED(101) = RED: LED(109) = RED ELSE LED(101) = DRK: LED(109) = DRK
+' Track #5 N
+        IF TRACKNORTH(5) = 1 THEN
+          Relay(5) = 1
+          IF BLK(8) = 0 THEN LED(103) = GRN ELSE LED(103) = FRED
+         ELSE
+          IF BLK(8) = OCC THEN LED(103) = RED ELSE LED(103) = DRK
+        END IF
 
-          '#7 South
-          IF SMFBN(101) = 1 AND SMFBR(105) = 1 AND SMFBN(106) = 1 AND SMFBN(107) AND PB# = 3 THEN
-           IF BLK(10) = OCC THEN LED(101) = FRED
-           IF BLK(10) <> OCC THEN
-                LED(101) = GRN
-                IF SMFBR(116) = 1 THEN LED(101) = FGRN
-                IF SMFBR(117) = 1 THEN LED(101) = FGRN
-                IF SMFBR(118) = 1 THEN LED(101) = FGRN
-           END IF
-          END IF
+' Track #6 N
+        IF TRACKNORTH(6) = 1 THEN
+          Relay(6) = 1
+          IF BLK(9) = 0 THEN LED(102) = GRN ELSE LED(102) = FRED
+         ELSE
+          IF BLK(9) = OCC THEN LED(102) = RED ELSE LED(102) = DRK
+        END IF
 
-          '#7 North
-          IF SMFBN(108) = 1 AND SMFBR(111) = 1 AND SMFBN(112) = 1 AND SMFBN(113) AND SMFBN(114) AND PB# = 16 THEN
-           IF BLK(10) = OCC THEN LED(109) = FRED
-           IF BLK(10) <> OCC THEN
-                LED(109) = GRN
-                IF SMFBR(116) = 1 THEN LED(109) = FGRN
-                'there is no need to check facing point Switch #17. IF SMFBR(117) = 1 THEN LED(109) = FGRN
-                IF SMFBR(118) = 1 THEN LED(109) = FGRN
-           END IF
-          END IF
+' Track #7 N
+        IF TRACKNORTH(7) = 1 THEN
+          Relay(7) = 1
+          IF BLK(10) = 0 THEN LED(101) = GRN ELSE LED(101) = FRED
+          IF SMFBN(117) <> TUN THEN LED(101) = RED
+         ELSE
+          IF BLK(10) = OCC THEN LED(101) = RED ELSE LED(101) = DRK
+        END IF
+        LED(101) = GRN
+' Track #1 S
+        IF TRACKSOUTH(1) = 1 THEN
+          Relay(1) = 1
+          IF BLK(4) = 0 THEN LED(115) = GRN ELSE LED(115) = FRED
+         ELSE
+          IF BLK(4) = OCC THEN LED(115) = RED ELSE LED(115) = DRK
+        END IF
+
+' Track #2 S
+        IF TRACKSOUTH(2) = 1 THEN
+          Relay(2) = 1
+          IF BLK(5) = 0 THEN LED(114) = GRN ELSE LED(114) = FRED
+         ELSE
+          IF BLK(5) = OCC THEN LED(114) = RED ELSE LED(114) = DRK
+        END IF
+
+' Track #3 S
+        IF TRACKSOUTH(3) = 1 THEN
+          Relay(3) = 1
+          IF BLK(6) = 0 THEN LED(113) = GRN ELSE LED(113) = FRED
+         ELSE
+          IF BLK(6) = OCC THEN LED(113) = RED ELSE LED(113) = DRK
+        END IF
+
+' Track #4 S
+        IF TRACKSOUTH(4) = 1 THEN
+          Relay(4) = 1
+          IF BLK(7) = 0 THEN LED(112) = GRN ELSE LED(112) = FRED
+         ELSE
+          IF BLK(7) = OCC THEN LED(112) = RED ELSE LED(112) = DRK
+        END IF
+
+' Track #5 S
+        IF TRACKSOUTH(5) = 1 THEN
+          Relay(5) = 1
+          IF BLK(8) = 0 THEN LED(111) = GRN ELSE LED(111) = FRED
+         ELSE
+          IF BLK(8) = OCC THEN LED(111) = RED ELSE LED(111) = DRK
+        END IF
+
+' Track #6 S
+        IF TRACKSOUTH(6) = 1 THEN
+          Relay(6) = 1
+          IF BLK(9) = 0 THEN LED(110) = GRN ELSE LED(110) = FRED
+          IF SMFBN(115) <> TUN THEN LED(110) = RED
+         ELSE
+          IF BLK(9) = OCC THEN LED(110) = RED ELSE LED(110) = DRK
+        END IF
+
+' Track #7 S
+        IF TRACKSOUTH(7) = 1 THEN
+          Relay(7) = 1
+          IF BLK(10) = 0 THEN LED(109) = GRN ELSE LED(109) = FRED
+          IF SMFBN(116) <> TUN THEN LED(109) = RED
+          IF SMFBN(118) <> TUN THEN LED(109) = RED
+         ELSE
+          IF BLK(10) = OCC THEN LED(109) = RED ELSE LED(109) = DRK
+        END IF
 
 
 DST:
@@ -1446,6 +1530,8 @@ CALL WRITERR
 LED(108) = 0: 'Turn indicator off
 
 IF Diagnose$ = "Y" THEN CALL CRTDISPLAY
+LOCATE 23, 27: PRINT "Press [ESC] to stop program"
+IF INKEY$ = CHR$(27) THEN END
 
 GOTO BRTL
 
@@ -1498,7 +1584,7 @@ REM**PRINTOUT TITLE
        CLS
        LOCATE 2, 25: PRINT "Louisville & Nashville Railroad"
        LOCATE 3, 32: PRINT "LC&L Subdivision"
-       LOCATE 3, 70: PRINT VERSION$
+       LOCATE 3, 66: PRINT VERSION$
 END SUB
 
 SUB INIT
@@ -2094,7 +2180,7 @@ REM UNPACK INPUT BYTES
      KEYSWITCH(41) = IB(3) \ B6 AND W1
      KEYSWITCH(39) = IB(3) \ B7 AND W1
 
-REM**READ INPUT BYTES FROM NODE 0 SUSIC 4 INPUT PORTS
+REM**READ INPUT BYTES FROM NODE 16 SUSIC 4 INPUT PORTS DeCoursey Yard
  UA = 16: NI = 16 'CARD 0, 4 INPUTS CARD 4 X 4 = 16 INPUTS
  CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3), IB(4).....
 REM**DISPLAY INPUT BYTES ON MONITOR SCREEN if you are not displaying equip status
@@ -2114,7 +2200,7 @@ REM**DISPLAY INPUT BYTES ON MONITOR SCREEN if you are not displaying equip statu
   END IF
   
 REM UNPACK INPUT BYTES
-     BLK(1) = IB(1) \ B0 AND W1    'NODE 0 CARD 0 PORT A
+     BLK(1) = IB(1) \ B0 AND W1    'NODE 16 CARD 0 PORT A
      BLK(2) = IB(1) \ B1 AND W1
      BLK(3) = IB(1) \ B2 AND W1
      BLK(4) = IB(1) \ B3 AND W1
@@ -2123,116 +2209,103 @@ REM UNPACK INPUT BYTES
      BLK(7) = IB(1) \ B6 AND W1
      BLK(8) = IB(1) \ B7 AND W1
 
-     BLK(9) = IB(2) \ B0 AND W1    'NODE 0 CARD 0 PORT B
+     BLK(9) = IB(2) \ B0 AND W1    'NODE 16 CARD 0 PORT B
      BLK(10) = IB(2) \ B1 AND W1
      BLK(11) = IB(2) \ B2 AND W1
      BLK(12) = IB(2) \ B3 AND W1
-     BLK(168) = IB(2) \ B4 AND W1
-     BLK(169) = IB(2) \ B5 AND W1
-     BLK(170) = IB(2) \ B6 AND W1
-     PB(0) = IB(2) \ B7 AND W1
+     BLK(171) = IB(2) \ B4 AND W1
 
-     PB(1) = IB(3) \ B0 AND W1  'NODE 0 CARD 0 PORT C
-     PB(2) = IB(3) \ B1 AND W1
-     PB(3) = IB(3) \ B2 AND W1
-     PB(4) = IB(3) \ B3 AND W1
-     PB(5) = IB(3) \ B4 AND W1
-     PB(6) = IB(3) \ B5 AND W1
-     PB(7) = IB(3) \ B6 AND W1
-     PB(8) = IB(3) \ B7 AND W1
+     BLK(20) = IB(3) \ B7 AND W1        ' NODE 16 CARD 0 PORT C
 
-     PB(9) = IB(4) \ B0 AND W1  'NODE 0 CARD 0 PORT D
-     PB(10) = IB(4) \ B1 AND W1
-     PB(11) = IB(4) \ B2 AND W1
-     PB(12) = IB(4) \ B3 AND W1
-     PB(13) = IB(4) \ B4 AND W1
-     PB(14) = IB(4) \ B5 AND W1
-     PB(15) = IB(4) \ B6 AND W1
-     PB(16) = IB(4) \ B7 AND W1
+     BLK(21) = IB(4) \ B0 AND W1        'NODE 16 CARD 0 PORT D
+     BLK(22) = IB(4) \ B1 AND W1
+     BLK(23) = IB(4) \ B2 AND W1
+     BLK(24) = IB(4) \ B3 AND W1
+     BLK(168) = IB(4) \ B4 AND W1
+     BLK(169) = IB(4) \ B5 AND W1
+     BLK(170) = IB(4) \ B6 AND W1
 
-     SMFBN(101) = IB(5) \ B0 AND W1    'NODE 0 CARD 2 PORT A
-     SMFBR(101) = IB(5) \ B1 AND W1
-     SMFBN(102) = IB(5) \ B2 AND W1
-     SMFBR(102) = IB(5) \ B3 AND W1
-     SMFBN(103) = IB(5) \ B4 AND W1
-     SMFBR(103) = IB(5) \ B5 AND W1
-     SMFBN(104) = IB(5) \ B6 AND W1
-     SMFBR(104) = IB(5) \ B7 AND W1
+     MAINSOUTH = IB(5) \ B0 AND W1          'NODE 16 CARD 2 PORT A
+     TRACKNORTH(1) = IB(5) \ B1 AND W1
+     TRACKNORTH(2) = IB(5) \ B2 AND W1
+     TRACKNORTH(3) = IB(5) \ B3 AND W1
+     TRACKNORTH(4) = IB(5) \ B4 AND W1
+     TRACKNORTH(5) = IB(5) \ B5 AND W1
+     TRACKNORTH(6) = IB(5) \ B6 AND W1
+     TRACKNORTH(7) = IB(5) \ B7 AND W1
 
-     SMFBN(105) = IB(6) \ B0 AND W1    'NODE 0 CARD 2 PORT B
-     SMFBR(105) = IB(6) \ B1 AND W1
-     SMFBN(106) = IB(6) \ B2 AND W1
-     SMFBR(106) = IB(6) \ B3 AND W1
-     SMFBN(107) = IB(6) \ B4 AND W1
-     SMFBR(107) = IB(6) \ B5 AND W1
-     SMFBN(108) = IB(6) \ B6 AND W1
-     SMFBR(108) = IB(6) \ B7 AND W1
+     TRACKSOUTH(1) = IB(6) \ B0 AND W1          'NODE 16 CARD 2 PORT B
+     TRACKSOUTH(2) = IB(6) \ B1 AND W1
+     TRACKSOUTH(3) = IB(6) \ B2 AND W1
+     TRACKSOUTH(4) = IB(6) \ B3 AND W1
+     TRACKSOUTH(5) = IB(6) \ B4 AND W1
+     TRACKSOUTH(6) = IB(6) \ B5 AND W1
+     TRACKSOUTH(7) = IB(6) \ B6 AND W1
+     MAINNORTH = IB(6) \ B7 AND W1
 
-     SMFBN(109) = IB(7) \ B0 AND W1  'NODE 0 CARD 2 PORT C
-     SMFBR(109) = IB(7) \ B1 AND W1
-     SMFBN(110) = IB(7) \ B2 AND W1
-     SMFBR(110) = IB(7) \ B3 AND W1
-     SMFBN(111) = IB(7) \ B4 AND W1
-     SMFBR(111) = IB(7) \ B5 AND W1
-     SMFBN(112) = IB(7) \ B6 AND W1
-     SMFBR(112) = IB(7) \ B7 AND W1
+     BLK(13) = IB(7) \ B0 AND W1           'NODE 16 CARD 2 PORT C
+     BLK(14) = IB(7) \ B1 AND W1
+     BLK(15) = IB(7) \ B2 AND W1
+     BLK(16) = IB(7) \ B3 AND W1
+     BLK(17) = IB(7) \ B4 AND W1
+     BLK(18) = IB(7) \ B5 AND W1
+     BLK(19) = IB(7) \ B6 AND W1
+     BLK(173) = IB(7) \ B7 AND W1
 
-     SMFBN(113) = IB(8) \ B0 AND W1 'NODE 0 CARD 2 PORT D
-     SMFBR(113) = IB(8) \ B1 AND W1
-     SMFBN(114) = IB(8) \ B2 AND W1
-     SMFBR(114) = IB(8) \ B3 AND W1
-     SMFBN(69) = IB(8) \ B4 AND W1
-     SMFBR(69) = IB(8) \ B5 AND W1
-     SMFBN(67) = IB(8) \ B6 AND W1
-     SMFBR(67) = IB(8) \ B7 AND W1
-
-     SWITCHN(1) = IB(9) \ B0 AND W1    'NODE 0 CARD 4 PORT A
+     SMFBN(67) = IB(8) \ B0 AND W1      'NODE 16 CARD 2 PORT D
+     SMFBN(69) = IB(8) \ B1 AND W1
+     SMFBN(71) = IB(8) \ B2 AND W1
+   
+     SWITCHN(1) = IB(9) \ B0 AND W1    'NODE 16 CARD 4 PORT A
      SWITCHREV(1) = IB(9) \ B1 AND W1
      SWITCHN(2) = IB(9) \ B2 AND W1
      SWITCHREV(2) = IB(9) \ B3 AND W1
      SWITCHN(3) = IB(9) \ B4 AND W1
      SWITCHREV(3) = IB(9) \ B5 AND W1
-     '= IB(9) \ B6 AND W1
-     '= IB(9) \ B7 AND W1
+     KEYSWITCH(67) = IB(9) \ B6 AND W1
+     SWITCHREV(67) = IB(9) \ B7 AND W1
 
-     SMFBN(115) = IB(10) \ B0 AND W1    'NODE 0 CARD 4 PORT B
-     SMFBR(115) = IB(10) \ B1 AND W1
-     SMFBN(116) = IB(10) \ B2 AND W1
-     SMFBR(116) = IB(10) \ B3 AND W1
-     SMFBN(117) = IB(10) \ B4 AND W1
-     SMFBR(117) = IB(10) \ B5 AND W1
-     SMFBN(118) = IB(10) \ B6 AND W1
-     SMFBR(118) = IB(10) \ B7 AND W1
+     SMFBN(115) = IB(10) \ B0 AND W1  'NODE 16 CARD 4 PORT B
+     SMFBN(116) = IB(10) \ B1 AND W1
+     SMFBN(117) = IB(10) \ B2 AND W1
+     SMFBN(118) = IB(10) \ B3 AND W1
+     PB(0) = IB(10) \ B6 AND W1
+     PB(1) = IB(10) \ B7 AND W1
 
-     BLK(13) = IB(11) \ B0 AND W1    'NODE 0 CARD 4 PORT C
-     BLK(14) = IB(11) \ B1 AND W1
-     BLK(15) = IB(11) \ B2 AND W1
-     BLK(16) = IB(11) \ B3 AND W1
-     BLK(17) = IB(11) \ B4 AND W1
-     BLK(18) = IB(11) \ B5 AND W1
-     BLK(19) = IB(11) \ B6 AND W1
-     BLK(20) = IB(11) \ B7 AND W1
+     PB(2) = IB(11) \ B0 AND W1  'NODE 16 CARD 4 PORT C
+     PB(3) = IB(11) \ B1 AND W1
+     PB(4) = IB(11) \ B2 AND W1
+     PB(5) = IB(11) \ B3 AND W1
+     PB(6) = IB(11) \ B4 AND W1
+     PB(7) = IB(11) \ B5 AND W1
+     PB(8) = IB(11) \ B6 AND W1
+     PB(9) = IB(11) \ B7 AND W1
 
-     BLK(21) = IB(12) \ B0 AND W1    'NODE 0 CARD 4 PORT D
-     BLK(22) = IB(12) \ B1 AND W1
-     BLK(23) = IB(12) \ B2 AND W1
-     BLK(24) = IB(12) \ B3 AND W1
-     KEYSWITCH(67) = IB(12) \ B4 AND W1
-     SWITCHREV(67) = IB(12) \ B5 AND W1
+     PB(10) = IB(12) \ B0 AND W1  'NODE 16 CARD 4 PORT D
+     PB(11) = IB(12) \ B1 AND W1
+     PB(12) = IB(12) \ B2 AND W1
+     PB(13) = IB(12) \ B3 AND W1
+     PB(14) = IB(12) \ B4 AND W1
+     PB(15) = IB(12) \ B5 AND W1
+     PB(16) = IB(12) \ B6 AND W1
+     PB(17) = IB(12) \ B7 AND W1
 
-     SWITCHN(4) = IB(13) \ B0 AND W1    'NODE 0 CARD 6 PORT A
-     PB(17) = IB(13) \ B1 AND W1
-     PB(18) = IB(13) \ B2 AND W1
-     PB(19) = IB(13) \ B3 AND W1
-     PB(20) = IB(13) \ B4 AND W1
-     PB(21) = IB(13) \ B5 AND W1
-     SMFBT(5) = IB(13) \ B6 AND W1: 'EK TRACK 5
-     SMFBT(4) = IB(13) \ B7 AND W1: 'EK TRACK 4
 
-     SMFBT(3) = IB(14) \ B0 AND W1     'NODE 0 CARD 6 PORT B
-     SMFBT(2) = IB(14) \ B1 AND W1:  'EK TRACK 2
-     SMFBT(1) = IB(14) \ B2 AND W1:  'EK TRACK 1
 
+
+
+    ' SWITCHN(4) = IB(13) \ B0 AND W1    'NODE 16 CARD 6 PORT A
+    ' PB(18) = IB(13) \ B2 AND W1
+    ' PB(19) = IB(13) \ B3 AND W1
+    ' PB(20) = IB(13) \ B4 AND W1
+    ' PB(21) = IB(13) \ B5 AND W1
+    ' SMFBT(5) = IB(13) \ B6 AND W1: 'EK TRACK 5
+    ' SMFBT(4) = IB(13) \ B7 AND W1: 'EK TRACK 4
+
+    ' SMFBT(3) = IB(14) \ B0 AND W1     'NODE 0 CARD 6 PORT B
+    ' SMFBT(2) = IB(14) \ B1 AND W1:  'EK TRACK 2
+    ' SMFBT(1) = IB(14) \ B2 AND W1:  'EK TRACK 1
+    '
      'SWITCHN(1) = IB(15) \ B0 AND W1    'NODE 0 CARD 6 PORT C
      'SWITCHREV(1) = IB(15) \ B1 AND W1
      'SWITCHN(2) = IB(15) \ B2 AND W1
@@ -2438,6 +2511,7 @@ SUB RXBYTE
   REM**START LOOP BY CHECKING FOR PC OVERRUN ERROR
 INLOOP:
      LSR = INP(PA + 5)         'Read UART's line status register (LSR)...
+
      IF (LSR AND 2) <> 0 THEN  '...and if bit 1 set, PC has overrun...
                                '...error, so print error message
        PRINT "PC overrun at node = "; UA; "line status register = "; LSR
@@ -2516,13 +2590,16 @@ DIM PND$(12)
 CLS
 LOCATE 1, 34: PRINT "TESTING SMINI"
 LOCATE 3, 34: PRINT "SMINI Address    "
-UA = 1: NO = 6: NI = 3: 'CARD 1, 6 OUTPUTS & 3 INPUTS
+
 LOCATE 3, 47
 805 INPUT ; ""; UA
  IF UA < 0 OR UA > 20 GOTO 805
+NO = 6: NI = 3: 'CARD UA, 6 OUTPUTS & 3 INPUTS
 Delay! = .2
 
 REM *******BEGIN TEST LOOP*******SMINI #1
+ LOCATE 23, 27
+ PRINT "Press [ESC] to stop testing"
 
 FOR J = 1 TO 5
        LOCATE 15, 52: : PRINT "Pass # "; : PRINT J
@@ -2551,10 +2628,13 @@ FOR J = 1 TO 5
      REM**OUTPUT LED DISPLAY DATA TO SMINI
        CALL OUTPUTS
 
-     REM**DELAY LOOP SO CAN OBSERVE LED STATUS
+     REM**DELAY LOOP SO THAT YOU CAN OBSERVE LED STATUS
        GOSUB 890
+          REM *** ESCAPE KEY TRAP
+          IF INKEY$ = CHR$(27) THEN GOTO 1000
 
-     REM**COMPLETE BIT POSITION LOOP
+        REM**COMPLETE BIT POSITION LOOP
+          
        NEXT N
 
      REM**TURN OFF CURRENT PORT BEFORE INCREMENT TO THE NEXT PORT
@@ -2564,16 +2644,18 @@ FOR J = 1 TO 5
 
      REM reduce time delay
        Delay! = Delay! - .05
+
   NEXT J
 
 
     REM TURN ON ALL SMINI LEDS
         OB(1) = 255: OB(2) = 255: OB(3) = 255
+            
             LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
             PRINT USING "####"; OB(1); : PRINT USING "####"; OB(2); : PRINT USING "####"; OB(3);
             
 
-        CALL OUTPUTS: Delay! = 2!: GOSUB 890
+        CALL OUTPUTS: Delay! = 5!: GOSUB 890
 
    REM TURN OFF ALL SMINI LEDS
        OB(1) = 0: OB(2) = 0: OB(3) = 0
@@ -2614,14 +2696,16 @@ FOR J = 1 TO 5
        OB(PN) = 2 ^ N    'Number 2 raised to power N
             LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
             PRINT USING "####"; OB(4); : PRINT USING "####"; OB(5); : PRINT USING "####"; OB(6);
-
      REM**OUTPUT LED DISPLAY DATA TO SMINI
        CALL OUTPUTS
 
      REM**DELAY LOOP SO CAN OBSERVE LED STATUS
        GOSUB 890
 
-     REM**COMPLETE BIT POSITION LOOP
+          REM *** ESCAPE KEY TRAP
+          IF INKEY$ = CHR$(27) THEN GOTO 1000
+
+       REM**COMPLETE BIT POSITION LOOP
        NEXT N
 
      REM**TURN OFF CURRENT PORT BEFORE INCREMENT TO THE NEXT PORT
@@ -2631,6 +2715,9 @@ FOR J = 1 TO 5
 
      REM reduce time delay
        Delay! = Delay! - .05
+
+     LOCATE 23, 27
+
 NEXT J
 
 
@@ -2639,7 +2726,7 @@ NEXT J
             LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
             PRINT USING "####"; OB(4); : PRINT USING "####"; OB(5); : PRINT USING "####"; OB(6);
 
-        CALL OUTPUTS: Delay! = 2!: GOSUB 890
+        CALL OUTPUTS: Delay! = 5!: GOSUB 890
 
    REM TURN OFF ALL SMINI LEDS
        OB(4) = 0:  OB(5) = 0: OB(6) = 0
@@ -2654,18 +2741,27 @@ NEXT J
 820     Inpt$ = INKEY$
         CALL INPUTS
         IF IB(1) = 1 THEN GOTO 840
+     LOCATE 23, 27
+     PRINT "Press [ESC] to stop testing"
+     IF INKEY$ = CHR$(27) THEN GOTO 1000
+
         IF Inpt$ = "" GOTO 820
         LOCATE 15, 25: PRINT "Testing SMINI"; : PRINT USING "##"; UA; : PRINT " Inputs                         "
 
-840   LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " INPUT BYTES =";
+840   LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " INPUT BYTES = ";
 850   CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3)
       OB(1) = IB(1): OB(2) = IB(2): OB(3) = IB(3)
       OB(4) = IB(1): OB(5) = IB(2): OB(6) = IB(3)
        
-      LOCATE 22, 23: PRINT USING "####"; IB(1); : PRINT USING "####"; IB(2); : PRINT USING "####"; IB(3);
+      LOCATE 22, 24: PRINT USING "####"; IB(1); : PRINT USING "####"; IB(2); : PRINT USING "####"; IB(3);
 
       CALL OUTPUTS
       IF IB(1) = 1 AND IB(3) = 128 THEN GOTO 1000
+     LOCATE 23, 27
+     PRINT "Press [ESC] to stop testing"
+     IF INKEY$ = CHR$(27) THEN GOTO 1000
+
+
       GOTO 850
 
 
@@ -2682,9 +2778,9 @@ END SUB
 
 SUB SPEEDTEST
 DIM LTST!(5)
-DIM Speed!(5)
+DIM Speed!(5): ' Lap Speed(I)
 DIM StdD!(5)
-DIM StdDev!(5)
+DIM StdDev!(5): ' standard deviation
 
 REM **** Variables for Flashing RED, Green & Yellow for signals and control panels
 FRED = RED: FRED1 = DRK: FRED2 = DRK
@@ -2693,6 +2789,15 @@ FGRN = GRN: FGRN1 = DRK: FGRN2 = DRK
 FYEL = YEL: FYEL1 = DRK: FYEL2 = DRK
 FREDGRN = RED: FREDGRN1 = GRN: FREDGRN2 = GRN
 
+SM(101) = TUR
+SM(102) = TUR
+SM(103) = TUR
+SM(108) = TUR
+SM(109) = TUR
+SM(110) = TUR
+Relay(1) = 1: ' turn on power Relay(1) to power block(4)
+CALL WRITERR
+
 500 CALL HEADER
 LOCATE 3, 19
 PRINT "Measuring Loco Speed On Test Loop Decoursey"
@@ -2700,83 +2805,87 @@ LOCATE 4, 24
 PRINT "Start Loco On Loop Track #1 going anti-clockwise."
 LOCATE 5, 8
 PRINT "Run 5 Laps at the same speed. You will be given an average speed."
-SM(101) = TUR
-SM(102) = TUR
-SM(103) = TUR
-SM(108) = TUR
-SM(109) = TUR
-CALL WRITERR
+' *** set track switches to allow loop of track #1, block(4), block(2) & block(11)
+
 LOCATE 7, 5: PRINT "Target Speed (60/45/30/15)"; : INPUT TSpeed
 LOCATE 8, 5: PRINT "CV value this Speed Step from Table "; : INPUT CV
 LOCATE 10.1: PRINT "READY "
+' turn off all lap tracking LEDs
 LED(107) = 0: LED(106) = 0: LED(105) = 0: LED(104) = 0: LED(103) = 0
+' begin 5 laps (loops) to measure the elapst time and calculate speed for each lap
 FOR I = 1 TO 5
-LED(115) = 0: LED(69) = 0: LED(120) = 0
-
+' turn off LEDs that indicate progressioin around the loop
+LED(115) = 0: LED(119) = O: LED(120) = 0
+' Start real time loop
 STRTL:
 CALL READRR
 
-' Loco is in Block #4 (timing block), turn off LED(69) in Start block
+' If Loco is in Block #4 (timing block), turn off LED(120) in Start block
+' and start measuring elapst time by getting the start time Start!
 IF BLK(4) = 0 THEN
         Start! = TIMER
        ELSE
-        LED(69) = 0
+        LED(119) = 0
         LED(120) = 0
 END IF
 
 IF BLK(4) = 1 AND BLK(11) = 1 THEN
         STST! = Start!
         LOCATE 10, 1: PRINT "TIMING"
-        LED(108 - I) = GRN
+        LED(108 - I) = GRN: ' LED(107), 106, 105, 104, 103 for Lap 1, 2, 3, 4 & 5
 END IF
 
 ' On entering Block #2 time stamp end of lap, make LEDs red
 IF BLK(2) = 0 THEN
         Finish! = TIMER ' until loco reaches END block keep getting a new time.
-        LED(115) = 0
         LED(120) = 0
+        LED(115) = 0
        ELSE
         LED(120) = 1
         LED(115) = RED
 END IF
+
 ' On entering Block #4 time stamp the start time
+' test code below
+'LOCATE 7, 1: PRINT "BLK(4)"; : PRINT BLK(4); : PRINT "BLK(2)"; : PRINT BLK(2); : PRINT "Blk(11)"; : PRINT BLK(11)
+
 IF BLK(4) = OCC AND BLK(2) = OCC THEN
-        ETST! = Finish!
+        ETST! = Finish!: ' END TIME
         LOCATE 10, 1:
         PRINT "END   "
 END IF
-
+' Lap time(I) = end time - start time
 IF STST! <> 0 THEN LTST!(I) = ETST! - STST!
 REM lines below to debug during development
-'LOCATE 1 + I, 30: PRINT Start!
-'LOCATE 1 + I, 40: PRINT STST!
-'LOCATE 1 + I, 50: PRINT ETST!
-'LOCATE 1 + I, 60: PRINT LTST!(I)
+'LOCATE 8 + I, 30: PRINT Start!
+'LOCATE 8 + I, 40: PRINT STST!
+'LOCATE 8 + I, 50: PRINT ETST!: ' Finish Time
+'LOCATE 8 + I, 60: PRINT LTST!(I)
 
 '501 Inpt$ = INKEY$
 'IF Inpt$ = "" GOTO 501
 
 ' Checking if entering aproach block before TIMING
 IF BLK(11) = OCC THEN
-        LED(69) = 1
+        LED(119) = 1
         LED(115) = 0
         LED(120) = 0
        ELSE
-        LED(69) = 0
+        LED(119) = 0
 END IF
 IF BLK(11) = OCC AND BLK(4) = 0 THEN LOCATE 10, 1: PRINT "START "
-IF BLK(4) = OCC THEN LED(69) = 0
+IF BLK(4) = OCC THEN LED(119) = 0
 CALL WRITERR
-
-'LOCATE 9 + I, 30: PRINT Start!
+' Lines to debug below
+'LOCATE 9 + I, 20: PRINT "Start Time"; : PRINT Start!
 'LOCATE 9 + I, 40: PRINT STST!
-'LOCATE 9 + I, 50: PRINT ETST!
-'LOCATE 9 + I, 60: PRINT LTST!(I)
+'LOCATE 9 + I, 60: PRINT "Finish Time"; : PRINT ETST!
+'LOCATE 9 + I, 80: PRINT "Lap Time"; : PRINT LTST!(I)
 IF LTST!(I) > 0 THEN GOTO 505
 GOTO STRTL
-505 Speed!(I) = 1028.182 / LTST!(I)
+505 Speed!(I) = 999.182 / LTST!(I): ' distance in inches x 12"/ft x 87.1/5280 ft/mile x 3600 sec/hr
 LOCATE 9 + I, 10:  PRINT " Lap Time #"; : PRINT I; : PRINT USING "###.###"; LTST!(I); : PRINT " sec.  Speed "; : PRINT USING "##.#"; Speed!(I); : PRINT " mph";
-LED(8 - I) = RED
+LED(108 - I) = RED
 Start! = 0
 Finish! = 0
 STST! = 0
@@ -2797,9 +2906,9 @@ LOCATE 15, 30: PRINT "Average Speed "; : PRINT USING "##.#"; AvgSpeed!; : PRINT 
 
 SCV! = (TSpeed / AvgSpeed!) * CV
 LOCATE 8, 50: PRINT " Adj to "; : PRINT USING "###.#"; SCV!
-LOCATE 16, 10: PRINT "Test Another Set of 5 Laps?";
+
 510 Inpt$ = INKEY$
-LED(107) = FRED: LED(115) = FRED: LED(69) = FR: LED(120) = FR
+LED(107) = FRED: LED(115) = FRED: LED(119) = FR: LED(120) = FR
 LED(106) = FRED: LED(105) = FRED: LED(104) = FRED: LED(103) = FRED
 ' Flashing LED Software
 CheckTime1! = TIMER
@@ -2811,8 +2920,10 @@ IF CheckTime1! > CheckTime2! + 1 THEN
   FYEL1 = FYEL: FYEL = FYEL2: FYLE2 = FYEL1
   FREDGRN1 = FREDGRN: FREDGRN = FREDGRN2: FREDGRN2 = FREDGRN1
 END IF
+
 CALL WRITERR
 
+LOCATE 16, 10: PRINT "Test Another Set of 5 Laps?";
 
 IF Inpt$ = "" GOTO 510
 Inpt$ = UCASE$(Inpt$)
@@ -2827,6 +2938,7 @@ IF Inpt$ = "Y" THEN
 END IF
 
 550 CALL HEADER
+Relay(1) = 0
 END SUB
 
 SUB SWLOCKS
@@ -4166,16 +4278,16 @@ NOREL17:
 ' lock processing complete
 
 L17END:
-
       IF UL(17) = 1 THEN
         IF SWITCHREV(17) = 1 THEN SM(17) = TUR
         IF SWITCHREV(17) = 0 THEN SM(17) = TUN
       END IF
+
 IF Diagnose$ <> "T" GOTO 700
 
 ' lines below used in testing switch locks  SKIPPED IF DISPLAYING TOWN STATUS ON SCREEN
   
-  SW = 55: ' switch number as on CTC panel by 2
+  SW = 29: ' switch number as on CTC panel by 2
   FOR L = 1 TO 6
   LOCATE L + 4, 1: PRINT "SW "; : PRINT SW; : PRINT "/"; : PRINT " SW-"; : IF SMFBN(SW) = 1 THEN PRINT "N" ELSE PRINT "R"
   LOCATE L + 4, 15: PRINT "/KEY "; : IF KEYSWITCH(SW) = 1 THEN PRINT "UNLOCK ";  ELSE PRINT "  LOCK "
@@ -4190,24 +4302,36 @@ IF Diagnose$ <> "T" GOTO 700
 
 
   LOCATE 11, 1:
-  BL1 = 13: ' START AT BLOCK ...
+  BL1 = 52: ' START AT BLOCK ...
   FOR M = BL1 TO (BL1 + 11)
     IF BLK(M) = 1 THEN CLOR(M) = 4 ELSE CLOR(M) = 7
     COLOR CLOR(M): PRINT "BLK("; : PRINT M; : PRINT ") "; : PRINT BLK(M);
   NEXT M
   LOCATE 13, 1
-  BL1 = 168
-  FOR M = BL1 TO (BL1 + 2)
-    IF BLK(M) = 1 THEN CLOR(M) = 4 ELSE CLOR(M) = 7
-    COLOR CLOR(M): PRINT "BLK("; : PRINT M; : PRINT ") "; : PRINT BLK(M);
-  NEXT M
-  COLOR 7
-  PRINT "BLK 20-19 "; : PRINT BLK(20) + BLK(21) + BLK(168) + BLK(19)
+'  BL1 = 168
+'  FOR M = BL1 TO (BL1 + 2)
+'    IF BLK(M) = 1 THEN CLOR(M) = 4 ELSE CLOR(M) = 7
+'    COLOR CLOR(M): PRINT "BLK("; : PRINT M; : PRINT ") "; : PRINT BLK(M);
+'  NEXT M
+'  COLOR 7
+'  PRINT "BLK 20-19 "; : PRINT BLK(20) + BLK(21) + BLK(168) + BLK(19)
 
   PRINT ""
   LOCATE 15, 1
-  SIG = 58
-  FOR I = SIG TO SIG + 2 STEP 2
+  SIG = 30
+  FOR I = SIG TO SIG + 4 STEP 2
+   IF SIGR(I) = 164 THEN SIGL$(I) = "R/R/R"
+   IF SIGR(I) = 100 THEN SIGL$(I) = "R/R/Y"
+   IF SIGR(I) = 148 THEN SIGL$(I) = "R/Y/R"
+   IF SIGR(I) = 140 THEN SIGL$(I) = "R/G/R"
+   IF SIGR(I) = 162 THEN SIGL$(I) = "Y/R/R"
+   IF SIGR(I) = 161 THEN SIGL$(I) = "G/R/R"
+   IF SIGL(I) = 164 THEN SIGL$(I) = "R/R/R"
+   IF SIGL(I) = 100 THEN SIGL$(I) = "R/R/Y"
+   IF SIGL(I) = 148 THEN SIGL$(I) = "R/Y/R"
+   IF SIGL(I) = 140 THEN SIGL$(I) = "R/G/R"
+   IF SIGL(I) = 162 THEN SIGL$(I) = "Y/R/R"
+   IF SIGL(I) = 161 THEN SIGL$(I) = "G/R/R"
    IF SIGR(I) = 36 THEN SIGR$(I) = "R/R"
    IF SIGR(I) = 34 THEN SIGR$(I) = "R/Y"
    IF SIGR(I) = 20 THEN SIGR$(I) = "Y/R"
@@ -4731,6 +4855,7 @@ SUB WRITERR
 
 REM PACK SUSIC1 DeCoursey Yard
                 ' CARD #1, 4 outputs
+
                OB(1) = SM(101)
                OB(1) = SM(102) * B2 OR OB(1)
                OB(1) = SM(103) * B4 OR OB(1)
@@ -4752,12 +4877,12 @@ REM PACK SUSIC1 DeCoursey Yard
                OB(4) = SM(69) * B6 OR OB(4)
 
                 ' CARD #3, 4 outputs
-               OB(5) = LED(101)
+               OB(5) = LED(101)                         'PORT A
                OB(5) = LED(102) * B2 OR OB(5)
                OB(5) = LED(103) * B4 OR OB(5)
                OB(5) = LED(104) * B6 OR OB(5)
 
-               OB(6) = LED(105)
+               OB(6) = LED(105)                         ' PORT B
                OB(6) = LED(106) * B2 OR OB(6)
                OB(6) = LED(107) * B4 OR OB(6)
                OB(6) = LED(108) * B6 OR OB(6)
@@ -4775,15 +4900,23 @@ REM PACK SUSIC1 DeCoursey Yard
                 ' CARD #5, 2 outputs
                OB(9) = LED(117)
                OB(9) = LED(118) * B1 OR OB(9)
-               OB(9) = LED(69) * B2 OR OB(9)
+               OB(9) = LED(119) * B2 OR OB(9)
                OB(9) = LED(120) * B3 OR OB(9)
                OB(9) = LED(121) * B4 OR OB(9)
                OB(9) = Light(1) * B5 OR OB(9)
-               'OB(9) = LED(33) * B6 OR OB(9)
+               OB(9) = LED(67) * B6 OR OB(9)
                'OB(9) = LED(34) * B7 OR OB(9)
+                                  
+               OB(10) = Relay(1)
+               OB(10) = Relay(2) * B1 OR OB(10)
+               OB(10) = Relay(3) * B2 OR OB(10)
+               OB(10) = Relay(4) * B3 OR OB(10)
+               OB(10) = Relay(5) * B4 OR OB(10)
+               OB(10) = Relay(6) * B5 OR OB(10)
+               OB(10) = Relay(7) * B6 OR OB(10)
+               'OB(10) = LED(67)
 
-               OB(10) = LED(67)
-               'OB(10) = LED(118) * B1 OR OB(10)
+               'OB(11) = LED(118) * B1 OR OB(11)
 
 
                 ' CARD #7, 0 outputs
@@ -4939,13 +5072,11 @@ REM PACK SMINI#4 SWITCH MOTORS & SIGNALS for S Worthville & Helix
                'OB(4) = 0 * B6 OR OB(4)
 
                OB(5) = SIGR(10) 'dwarf off CRR later rename this SIGR(30) when signals renumbered
-               'OB(5) = 0
+               OB(5) = SIGR(36) * B3 OR OB(5)
                'OB(5) = 0
 
-               OB(6) = 0
-               OB(6) = 0
-               OB(6) = 0
-               OB(6) = 0
+               OB(6) = SIGL(36)
+               'OB(6) = 0
 
                UA = 4: NI = 3: NO = 6: REM NS = 4: CT(1) = 255
                CALL OUTPUTS
@@ -4973,8 +5104,10 @@ REM PACK SMINI#5 SWITCH MOTORS & SIGNALS for N Latonia
                OB(3) = SM(61): ' Switch Lock
                OB(3) = SIGL(58) * B2 OR OB(3)
                
+                             
                OB(4) = SIGR(62)
                OB(4) = SIGR(63) * B3 OR OB(4)
+               OB(4) = LED(55) * B6 OR OB(4)
 
                OB(5) = SIGL(62)
                
