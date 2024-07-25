@@ -98,11 +98,11 @@ REM** GLOBALIZE TIMER VARIABLES
      COMMON SHARED Hours, Mins, Seconds!, Ratio, StartFC!, FinishFC!, T1SAVE&
 
         COMMON SHARED VERSION$
-        VERSION$ = "V 2024-06-07"
+        VERSION$ = "V 2024-07-20"
      
 
 REM** DIMENSION RAILROAD DEVICES
-     DIM SHARED CTCSWL(30), CTCSGLN(30), CTCSGLS(30), CTCPB(30), CTCPBLATCH(30), CTCLEDSW(30), CTCLEDSIG(30), SM(150), SMFBN(150), SMFBR(150), BLK(200), SMFBT(20), SIGR(82), SIGRold(82), SIGL(82), SIGLold(82)
+     DIM SHARED CTCSWL(30), CTCSGLN(30), CTCSGLS(30), CTCPB(30), CTCPBLATCH(30), CTCLEDSW(30), CTCLEDSIG(30), SM(150), SMFBN(150), SMFBR(150), BLK(200), SIGR(82), SIGRold(82), SIGL(82), SIGLold(82)
 
      DIM SHARED SM$(180), SMFB$(180), CTCSWL$(30), CTCLEDSW$(30), CTCSIGL$(30), CTCLEDSIG$(30), CTCPB$(30), BLK$(200), SIGN$(30), SIGS$(30), SIGR$(82), SIGL$(82), CrossBuck(10), Bell(10)
      DIM SHARED PB(50), LED(290), SWITCHN(150), SWITCHREV(150), KEYSWITCH(150), INHAND(150), NHAND(150), Light(150), TD(150), UL(150), TRACKNORTH(20), TRACKSOUTH(20), CLOR(200), RELAY(12)
@@ -492,7 +492,7 @@ SIG55L: ' Dwarf at S yard A/R
         SIGL(55) = REDB
         IF BLK(24) + BLK(167) + BLK(166) > 0 GOTO SIG58L
         IF SMFBN(57) + SMFBN(55) = 0 THEN
-           IF SIGL(54) <> REDREDB THEN SIGL(55) = GRNB ELSE SIGL(55) = YELB
+           IF SIGL(54) < REDFREDB THEN SIGL(55) = GRNB ELSE SIGL(55) = YELB
         ELSE
            SIGL(55) = REDB
         END IF
@@ -506,12 +506,12 @@ SIG58L: ' Latonia crossover double head
         IF SMFBN(59) = TUN THEN
           IF SMFBN(55) = 0 THEN GOTO SIG60L
           IF BLK(21) + BLK(22) + BLK(24) + BLK(167) + BLK(166) <> 0 THEN GOTO SIG60L
-          IF SIGL(54) <> REDREDB THEN SIGL(58) = GRNREDB ELSE SIGL(58) = YELREDB
+          IF SIGL(54) < REDFREDB THEN SIGL(58) = GRNREDB ELSE SIGL(58) = YELREDB
         ELSE
           IF SMFBN(55) = 1 THEN GOTO SIG60L
           IF SMFBN(57) = 0 THEN GOTO SIG60L
           IF BLK(20) + BLK(21) + BLK(23) + BLK(24) + BLK(167) + BLK(16) <> 0 THEN GOTO SIG60L
-          IF SIGL(54) <> REDREDB THEN SIGL(58) = REDGRNB ELSE SIGL(58) = REDYELB
+          IF SIGL(54) < REDFREDB THEN SIGL(58) = REDGRNB ELSE SIGL(58) = REDYELB
         END IF
         IF SIGL(58) + SIGLold(58) = 32 THEN SIGL(58) = REDREDB
         IF SIGL(58) + SIGLold(58) = 67 THEN SIGL(58) = REDREDB
@@ -524,7 +524,7 @@ SIG60L: ' Latonia crossover dwarf
         IF SMFBN(57) = 0 THEN GOTO SIG62L
         IF SMFBN(59) = TUN THEN
            IF SMFBN(57) = 0 THEN SIGL(60) = REDB
-           IF SIGL(54) <> REDREDB THEN SIGL(60) = GRNB ELSE SIGL(60) = YELB
+           IF SIGL(54) < REDFREDB THEN SIGL(60) = GRNB ELSE SIGL(60) = YELB
         ELSE
            SIGL(60) = REDB
         END IF
@@ -835,13 +835,13 @@ SIG46R: ' N Sparta single head & 2 dwarfs  11-20-2020
         IF SMFBN(45) = TUN THEN
           IF SMFBN(43) = TUN THEN
            IF BLK(38) > 0 THEN GOTO SIG40R
-           IF SIGR(48) <> REDREDB THEN SIGR(46) = GRNB ELSE SIGR(46) = YELB
-          ELSE
+           IF SIGR(48) < REDFREDB THEN SIGR(46) = GRNB ELSE SIGR(46) = YELB
+         ELSE
            IF BLK(38) > 0 THEN GOTO SIG40R
-           IF SIGR(48) <> REDREDB THEN SIGR(44) = GRNB ELSE SIGR(44) = YELB
+           IF SIGR(48) < REDFREDB THEN SIGR(44) = GRNB ELSE SIGR(44) = YELB
           END IF
         ELSE
-          IF SIGR(48) <> REDREDB THEN SIGR(42) = GRNB ELSE SIGR(42) = YELB
+          IF SIGR(48) < REDFREDB THEN SIGR(42) = GRNB ELSE SIGR(42) = YELB
         END IF
 
         IF SIGR(42) + SIGRold(42) = 3 THEN SIGR(42) = REDB
@@ -1300,7 +1300,8 @@ LOCATE 18, 1: COLOR CLOR(59), O: PRINT "SW #31 X/O main     "
 LOCATE 19, 1: COLOR CLOR(60), O: PRINT "SW #31 X/O siding   "
 LOCATE 20, 1: COLOR CLOR(62), O: PRINT "SW #29 Interlock    "
 LOCATE 21, 1: COLOR CLOR(73), O: PRINT "South Main          "
-LOCATE 22, 1: COLOR CLOR(69), 0: PRINT "Carrolton RR        "
+LOCATE 22, 1: COLOR CLOR(64), 0: PRINT "C.P. Hlx            "
+LOCATE 23, 1: COLOR CLOR(65), 0: PRINT "Carrolton RR in Hlx "
 
 FOR I = 29 TO 37 STEP 2
 IF SMFBN(I) = 1 THEN
@@ -1536,7 +1537,7 @@ SELECT CASE PB
          END IF
         END IF
 
-       CASE 1: 'South Main to Carrolton RR
+       CASE 1: 'North Main to Carrolton RR
        IF BLK(2) <> OCC THEN
         IF BLK(171) <> OCC THEN
          SM(108) = TUN
@@ -1550,7 +1551,7 @@ SELECT CASE PB
          SM(105) = TUN
          SM(69) = TUN
         END IF
-       CASE 3: ' Main North LH around Latonia
+       CASE 3: ' Main South LH around Latonia
         IF BLK(15) + BLK(173) < OCC THEN
          SM(101) = TUN
          SM(105) = TUN
@@ -1785,8 +1786,8 @@ REM **** Logic statements for DeCoursey Yard Control Panel LEDS
         IF TRACKSOUTH(7) = 1 THEN
           RELAY(7) = 1
         ' IF SMFBN(118) <> TUN THEN LED(109) = RED: 'Relay(8) = 0
-          IF SMFBN(117) <> TUN THEN RELAY(8) = 0: ' if SW(117) set for CV yard do not energize far end of track D#7
-          IF SWITCHREV(2) = 1 THEN RELAY(8) = 0: ' case for DS#2 track to be in use do not energige the far end of D#7s
+          IF SMFBN(117) <> TUN THEN RELAY(7) = 0: ' if SW(117) set for CV yard do not energize far end of track D#7
+          IF SWITCHREV(2) = 1 THEN RELAY(7) = 0: ' case for DS#2 track to be in use do not energige the far end of D#7s
           IF BLK(181) = 0 THEN LED(109) = GRN ELSE LED(109) = FRED
           IF SMFBN(116) <> TUN THEN LED(109) = FRED: 'Relay(8) = 0
          ELSE
@@ -3150,20 +3151,6 @@ REM UNPACK INPUT BYTES
      BLK(181) = IB(13) \ B6 AND W1: 'D7 North
      BLK(182) = IB(13) \ B7 AND W1: 'D6 South
 
-    ' SMFBT(3) = IB(14) \ B0 AND W1     'NODE 0 CARD 6 PORT B
-    ' SMFBT(2) = IB(14) \ B1 AND W1:  'EK TRACK 2
-    ' SMFBT(1) = IB(14) \ B2 AND W1:  'EK TRACK 1
-    '
-     'SWITCHN(1) = IB(15) \ B0 AND W1    'NODE 0 CARD 6 PORT C
-     'SWITCHREV(1) = IB(15) \ B1 AND W1
-     'SWITCHN(2) = IB(15) \ B2 AND W1
-     'SWITCHREV(2) = IB(15) \ B3 AND W1
-     'SWITCHN(3) = IB(15) \ B4 AND W1
-     'SWITCHREV(3) = IB(15) \ B5 AND W1
-     '= IB(15) \ B6 AND W1
-     '= IB(15) \ B7 AND W1
-
-     '= IB(16) \ B0 AND W1     'NODE 0 CARD 6 PORT D
      
 
 
@@ -5091,39 +5078,40 @@ IF Diagnose$ <> "T" GOTO 700
   COLOR 7: LOCATE 14, 1
   Row = 14
 
-  SIG = SMtest - 1
-  FOR I = SIG TO SIG + 8 STEP 1
-   IF SIGR(I) = 164 THEN SIGL$(I) = "R/R/R"
-   IF SIGR(I) = 100 THEN SIGL$(I) = "R/R/Y"
-   IF SIGR(I) = 148 THEN SIGL$(I) = "R/Y/R"
-   IF SIGR(I) = 140 THEN SIGL$(I) = "R/G/R"
-   IF SIGR(I) = 162 THEN SIGL$(I) = "Y/R/R"
-   IF SIGR(I) = 161 THEN SIGL$(I) = "G/R/R"
-   IF SIGL(I) = 164 THEN SIGL$(I) = "R/R/R"
-   IF SIGL(I) = 100 THEN SIGL$(I) = "R/R/Y"
-   IF SIGL(I) = 148 THEN SIGL$(I) = "R/Y/R"
-   IF SIGL(I) = 140 THEN SIGL$(I) = "R/G/R"
-   IF SIGL(I) = 162 THEN SIGL$(I) = "Y/R/R"
-   IF SIGL(I) = 161 THEN SIGL$(I) = "G/R/R"
+  SIG = SMtest - 2
+  FOR I = SIG TO SIG + 10 STEP 1
+   IF SIGR(I) = 164 THEN SIGR$(I) = "R/R/R"
+   IF SIGR(I) = 162 THEN SIGR$(I) = "Y/R/R"
+   IF SIGR(I) = 161 THEN SIGR$(I) = "G/R/R"
+   IF SIGR(I) = 148 THEN SIGR$(I) = "R/Y/R"
+   IF SIGR(I) = 140 THEN SIGR$(I) = "R/G/R"
+   IF SIGR(I) = 100 THEN SIGR$(I) = "R/R/Y"
    IF SIGR(I) = 36 THEN SIGR$(I) = "R/R"
    IF SIGR(I) = 34 THEN SIGR$(I) = "R/Y"
-   IF SIGR(I) = 32 THEN SIGL$(I) = "R/D"
-   IF SIGR(I) = 20 THEN SIGR$(I) = "Y/R"
    IF SIGR(I) = 33 THEN SIGR$(I) = "R/G"
+   IF SIGR(I) = 32 THEN SIGR$(I) = "R/ "
+   IF SIGR(I) = 20 THEN SIGR$(I) = "Y/R"
    IF SIGR(I) = 12 THEN SIGR$(I) = "G/R"
    IF SIGR(I) = 4 THEN SIGR$(I) = "R"
    IF SIGR(I) = 2 THEN SIGR$(I) = "Y"
    IF SIGR(I) = 1 THEN SIGR$(I) = "G"
+   
+   IF SIGL(I) = 164 THEN SIGL$(I) = "R/R/R"
+   IF SIGL(I) = 162 THEN SIGL$(I) = "Y/R/R"
+   IF SIGL(I) = 161 THEN SIGL$(I) = "G/R/R"
+   IF SIGL(I) = 148 THEN SIGL$(I) = "R/Y/R"
+   IF SIGL(I) = 140 THEN SIGL$(I) = "R/G/R"
+   IF SIGL(I) = 100 THEN SIGL$(I) = "R/R/Y"
    IF SIGL(I) = 36 THEN SIGL$(I) = "R/R"
    IF SIGL(I) = 34 THEN SIGL$(I) = "R/Y"
-   IF SIGL(I) = 32 THEN SIGL$(I) = "R/D"
-   IF SIGL(I) = 20 THEN SIGL$(I) = "Y/R"
    IF SIGL(I) = 33 THEN SIGL$(I) = "R/G"
+   IF SIGL(I) = 32 THEN SIGL$(I) = "R/ "
+   IF SIGL(I) = 20 THEN SIGL$(I) = "Y/R"
    IF SIGL(I) = 12 THEN SIGL$(I) = "G/R"
    IF SIGL(I) = 4 THEN SIGL$(I) = "R"
    IF SIGL(I) = 2 THEN SIGL$(I) = "Y"
    IF SIGL(I) = 1 THEN SIGL$(I) = "G"
-
+   
    IF SIGL(I) <> 0 THEN LOCATE Row, 1: PRINT "SIGL"; : PRINT I; : PRINT " "; : PRINT SIGL(I); : PRINT SIGL$(I): Row = Row + 1
    IF SIGR(I) <> 0 THEN LOCATE Row, 30: PRINT "SIGR"; : PRINT I; : PRINT " "; : PRINT SIGR(I); : PRINT SIGR$(I)
   NEXT I
