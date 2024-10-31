@@ -2,7 +2,7 @@ DEFINT A-Z
 
 DECLARE SUB SGCCS (NXA%, SXA%, X%, XS%, TD%, PGCC%)
 DECLARE SUB SWLOCKS ()
-DECLARE SUB TestSignals ()
+DECLARE SUB TESTSIGNALS ()
 DECLARE SUB SMINItest ()
 DECLARE SUB ABSIGNALS ()
 DECLARE SUB Signals ()
@@ -98,13 +98,13 @@ REM** GLOBALIZE TIMER VARIABLES
      COMMON SHARED Hours, Mins, Seconds!, Ratio, StartFC!, FinishFC!, T1SAVE&
 
         COMMON SHARED VERSION$
-        VERSION$ = "V 2024-07-20"
+        VERSION$ = "V 2024-10-31"
      
 
 REM** DIMENSION RAILROAD DEVICES
-     DIM SHARED CTCSWL(30), CTCSGLN(30), CTCSGLS(30), CTCPB(30), CTCPBLATCH(30), CTCLEDSW(30), CTCLEDSIG(30), SM(150), SMFBN(150), SMFBR(150), BLK(200), SIGR(82), SIGRold(82), SIGL(82), SIGLold(82)
+     DIM SHARED CTCSWL(30), CTCSGLN(30), CTCSGLS(30), CTCPB(30), CTCPBLATCH(30), CTCLEDSW(30), CTCLEDSIG(30), SM(150), SMFBN(150), SMFBR(150), BLK(200), SIGR(84), SIGRold(84), SIGL(84), SIGLold(84)
 
-     DIM SHARED SM$(180), SMFB$(180), CTCSWL$(30), CTCLEDSW$(30), CTCSIGL$(30), CTCLEDSIG$(30), CTCPB$(30), BLK$(200), SIGN$(30), SIGS$(30), SIGR$(82), SIGL$(82), CrossBuck(10), Bell(10)
+     DIM SHARED SM$(180), SMFB$(180), CTCSWL$(30), CTCLEDSW$(30), CTCSIGL$(30), CTCLEDSIG$(30), CTCPB$(30), BLK$(200), SIGN$(30), SIGS$(30), SIGR$(84), SIGL$(84), CrossBuck(10), Bell(10)
      DIM SHARED PB(50), LED(290), SWITCHN(150), SWITCHREV(150), KEYSWITCH(150), INHAND(150), NHAND(150), Light(150), TD(150), UL(150), TRACKNORTH(20), TRACKSOUTH(20), CLOR(200), RELAY(12)
      
      REM**INITIALIZE CONSTANTS FOR PACKING AND UNPACKING I/O BYTES
@@ -506,7 +506,8 @@ SIG58L: ' Latonia crossover double head
         IF SMFBN(59) = TUN THEN
           IF SMFBN(55) = 0 THEN GOTO SIG60L
           IF BLK(21) + BLK(22) + BLK(24) + BLK(167) + BLK(166) <> 0 THEN GOTO SIG60L
-          IF SIGL(54) < REDFREDB THEN SIGL(58) = GRNREDB ELSE SIGL(58) = YELREDB
+          IF SIGL(54) <> REDREDB THEN SIGL(58) = GRNREDB ELSE SIGL(58) = YELREDB
+          IF SIGL(54) = 32 THEN SIGL(58) = YELREDB: ' R/D
         ELSE
           IF SMFBN(55) = 1 THEN GOTO SIG60L
           IF SMFBN(57) = 0 THEN GOTO SIG60L
@@ -524,7 +525,8 @@ SIG60L: ' Latonia crossover dwarf
         IF SMFBN(57) = 0 THEN GOTO SIG62L
         IF SMFBN(59) = TUN THEN
            IF SMFBN(57) = 0 THEN SIGL(60) = REDB
-           IF SIGL(54) < REDFREDB THEN SIGL(60) = GRNB ELSE SIGL(60) = YELB
+           IF SIGL(54) <> REDREDB THEN SIGL(60) = GRNB ELSE SIGL(60) = YELB
+           IF SIGL(54) = 32 THEN SIGL(60) = YELB: ' R/D
         ELSE
            SIGL(60) = REDB
         END IF
@@ -624,11 +626,33 @@ SIG78L: 'DeCoursey yard track #4 North, to Latonia
 
 SIG80L: 'DeCoursey yard track #5 North, to Latonia
         SIGL(80) = RED
-        IF SIGL(68) = REDREDB THEN GOTO SIG82R
+        IF SIGL(68) = REDREDB THEN GOTO SIG84L
          IF TRACKSOUTH(5) = 1 THEN
-          IF BLK(11) + BLK(2) > 0 THEN GOTO SIG82R
+          IF BLK(11) + BLK(2) > 0 THEN GOTO SIG84L
            IF MAINSOUTH = 1 THEN SIGL(80) = GRN ELSE SIGL(80) = FRED
          END IF
+
+SIG84L: 'Carrolton Yard Aproach
+        SIGL(84) = REDB
+         IF SMFBN(71) = TUN THEN
+           IF BLK(3) + BLK(171) > 0 THEN GOTO SIG82R
+           IF SIGL(70) <> REDREDB THEN SIGL(84) = GRNB ELSE SIGL(84) = YELB
+         ELSE
+           IF BLK(2) + BLK(171) > 0 THEN GOTO SIG82R
+           IF MAINNORTH <> 1 THEN GOTO SIG82R
+           IF BLK(1) + BLK(2) + BLK(11) > 0 THEN GOTO SIG82R
+          FOR I = 1 TO 7
+           IF TRACKNORTH(I) = 1 THEN
+            IF BLK(I + 3) = 0 THEN SIGL(84) = YELB ELSE SIGL(84) = FREDB
+            GOTO SIG82R
+           END IF
+          NEXT I
+         END IF
+        IF MAINSOUTH = 1 AND MAINNORTH = 1 THEN
+         IF BLK(2) + BLK(11) + BLK(171) > 0 THEN GOTO SIG82R
+         IF SIGL(68) <> REDREDB THEN SIGL(84) = GRNB ELSE SIGL(84) = YELB
+        END IF
+
 
 '********************* RIGHT *** NORTHBOUND *******************************
 SIG82R: ' Decoursey yard track #6 north, to Worthville
@@ -816,7 +840,7 @@ SIG48R: ' S Walton double head
             IF BLK(29) + BLK(32) <> 0 THEN GOTO SIG46R
              IF SIGR(54) <> REDB THEN SIGR(48) = GRNREDB ELSE SIGR(48) = YELREDB
            ELSE : ' SM(47)=N & SM(49)=R
-            IF BLK(31) <> 0 THEN SIGR(48) = REDFREDB: GOTO SIG46R
+            IF BLK(31) > 0 THEN SIGR(48) = REDFREDB: GOTO SIG46R
             IF SIGR(52) <> REDB THEN SIGR(48) = REDGRNB ELSE SIGR(48) = REDYELB
           END IF
         ELSE : ' SM(47)=R
@@ -945,7 +969,7 @@ SIG30R: 'S Worthville double head 21-June-2019
 
 SIG28R:
 
-        ' Worthville Dwarf CRR must be renumbered to SIG30R when others renumbered
+        ' Worthville Dwarf CRR
         SIGR(28) = REDB
         IF CTCPB(1) = 1 THEN CTCPBLATCH(1) = 1
         IF CTCPBLATCH(1) = 0 THEN GOTO SIG8R
@@ -967,7 +991,7 @@ SIG8R:
 IF Signal$ = "N" GOTO 777
 '************************ APROACH LIGHTING *************************
         IF BLK(74) + BLK(73) + BLK(67) + BLK(64) + BLK(63) + BLK(62) + BLK(61) + BLK(60) + BLK(59) = 0 THEN SIGR(30) = DRK: SIGR(28) = DRK
-        IF BLK(51) + BLK(52) + BLK(53) + BLK(54) + BLK(55) + BLK(56) + BLK(57) + BLK(58) + BLK(59) + BLK(61) + BLK(62) = 0 THEN SIGL(30) = DRK: SIGL(31) = DRK: SIGL(29) = DRK
+        IF BLK(49) + BLK(50) + BLK(51) + BLK(52) + BLK(53) + BLK(54) + BLK(55) + BLK(56) + BLK(57) + BLK(58) + BLK(59) + BLK(61) + BLK(62) = 0 THEN SIGL(30) = DRK: SIGL(31) = DRK: SIGL(29) = DRK
         IF BLK(45) + BLK(49) + BLK(50) + BLK(51) + BLK(52) + BLK(53) + BLK(56) + BLK(58) = 0 THEN SIGL(32) = DRK: SIGL(34) = DRK: SIGL(36) = DRK
         IF BLK(53) + BLK(54) + BLK(55) + BLK(56) + BLK(58) + BLK(59) + BLK(60) + BLK(61) + BLK(62) + BLK(63) + BLK(64) + BLK(67) = 0 THEN SIGR(32) = DRK: SIGR(34) = DRK: SIGR(36) = DRK
         IF BLK(49) + BLK(50) + BLK(51) + BLK(52) + BLK(53) + BLK(54) + BLK(55) + BLK(58) + BLK(60) = 0 THEN SIGR(38) = DRK: SIGR(39) = DRK
@@ -986,6 +1010,7 @@ IF Signal$ = "N" GOTO 777
         IF BLK(18) + BLK(19) + BLK(20) + BLK(21) + BLK(168) + BLK(169) + BLK(170) = 0 THEN SIGL(58) = DRK: SIGL(60) = DRK
         IF BLK(13) + BLK(14) + BLK(15) + BLK(16) + BLK(17) + BLK(18) + BLK(19) + BLK(169) + BLK(170) + BLK(173) = 0 AND SMFBN(65) = 1 THEN SIGR(62) = DRK: SIGR(63) = DRK
         IF BLK(15) + BLK(16) + BLK(18) + BLK(19) + BLK(170) = 0 THEN SIGL(62) = DRK
+        IF BLK(68) + BLK(1) = 0 THEN SIGL(84) = DRK
 777
 
 END SUB
@@ -1016,9 +1041,9 @@ IF Finish! - Start! <= 17 AND Finish! - Start! > 16 THEN GOTO Walton
 IF Finish! - Start! <= 30 AND Finish! - Start! > 17 THEN GOTO Sparta
 IF Finish! - Start! <= 31 AND Finish! - Start! > 30 THEN GOTO Worthville
 IF Finish! - Start! <= 32 AND Finish! - Start! > 31 THEN GOTO Campbellsburg
-IF Finish! - Start! <= 45 AND Finish! - Start! > 31 THEN GOTO LaGrange
-IF Finish! - Start! <= 47 AND Finish! - Start! > 46 THEN GOTO CTCmach
-IF Finish! - Start! > 48 THEN Start! = TIMER: GOTO LastReport
+IF Finish! - Start! <= 45 AND Finish! - Start! > 32 THEN GOTO LaGrange
+IF Finish! - Start! <= 46 AND Finish! - Start! > 45 THEN GOTO CTCmach
+IF Finish! - Start! > 47 THEN Start! = TIMER: GOTO LastReport
 
 
 DeCoursey:
@@ -1044,7 +1069,7 @@ FOR I = 171 TO 183
   CLOR(I) = 7
  END IF
 NEXT I
-
+' if occupied print it in red else white
 LOCATE 8, 1: COLOR CLOR(1), 0: PRINT "South Main to CRR   "
 LOCATE 9, 1: COLOR CLOR(171), 0: PRINT "SW #71 Interlock     "
 LOCATE 10, 1: COLOR CLOR(2), 0: PRINT "South Yard Throat   "
@@ -1054,10 +1079,10 @@ LOCATE 13, 1: COLOR CLOR(5), 0: PRINT "Yard Track #2       "
 LOCATE 14, 1: COLOR CLOR(6), 0: PRINT "Yard Track #3       "
 LOCATE 15, 1: COLOR CLOR(7), 0: PRINT "Yard Track #4       "
 LOCATE 16, 1: COLOR CLOR(8), 0: PRINT "Yard Track #5       "
-LOCATE 17, 1: COLOR CLOR(182), 0: PRINT "Yard Track #6S "
-LOCATE 17, 17: COLOR CLOR(9), 0: PRINT "Yard Track #6N "
-LOCATE 18, 1: COLOR CLOR(181), 0: PRINT "Yard Track #7S "
-LOCATE 18, 17: COLOR CLOR(10), 0: PRINT "Yard Track #7N "
+LOCATE 17, 1: COLOR CLOR(9), 0: PRINT "Yard Track #6N "
+LOCATE 17, 17: COLOR CLOR(182), 0: PRINT "Yard Track #6S "
+LOCATE 18, 1: COLOR CLOR(10), 0: PRINT "Yard Track #7N "
+LOCATE 18, 17: COLOR CLOR(181), 0: PRINT "Yard Track #7S "
 LOCATE 19, 1: COLOR CLOR(11), 0: PRINT "North Yard Throat   "
 
 LOCATE 8, 35: COLOR CLOR(173), 0: PRINT "SW #69 X/O Main N   "
@@ -1110,14 +1135,17 @@ LOCATE 18, 58: COLOR CLOR(118), 0: PRINT SMFB$(118)
 FOR I = 1 TO 7
     IF TRACKSOUTH(I) = OCC THEN
      CLOR(I) = 2
+      IF BLK(I + 3) = OCC THEN CLOR(I) = 6
      LOCATE I + 11, 1
      COLOR CLOR(I), 0
      PRINT "S Yard Track#"; : PRINT I
      CLOR(I) = 7
     END IF
 
+
     IF TRACKNORTH(I) = OCC THEN
      CLOR(I) = 2
+      IF BLK(I + 3) = OCC THEN CLOR(I) = 6
      LOCATE I + 11, 1
      COLOR CLOR(I), 0
      PRINT "N Yard Track#"; : PRINT I
@@ -1125,6 +1153,23 @@ FOR I = 1 TO 7
     END IF
 
 NEXT I
+
+   IF TRACKSOUTH(6) = OCC THEN
+    IF BLK(182) = OCC THEN
+     COLOR 6
+     LOCATE 17, 17
+     PRINT "S Yard Track# 6"
+    END IF
+   END IF
+
+   IF TRACKSOUTH(7) = OCC THEN
+    IF BLK(181) = OCC THEN
+     COLOR 6
+     LOCATE 18, 17
+     PRINT "S Yard Track# 7"
+    END IF
+   END IF
+
 COLOR 7, 0
 
 Finish! = TIMER
@@ -1517,25 +1562,27 @@ AlignSwitchDeC:
 SELECT CASE PB
        CASE 0: ' DO NOTHING NO PUSH BUTTON WAS PRESSED. MAY ACT ON SWITCHrev TO DEISEL SERVICE TRACKS
           ' if power on DS#1 align all switches to track #6
-        IF SWITCHREV(3) = 1 THEN
-         IF BLK(2) + BLK(12) < OCC THEN
-          SM(108) = TUN
-          SM(111) = TUR
-          SM(112) = TUN
-          SM(113) = TUN
-          SM(114) = TUR
-         END IF
-        END IF
+' THIS CODE REMOVED BECAUSE CREWS MOVING FROM FUEL RACK DID NOT RETURN TOGEL TO OFF
+' THIS CAUSED ALIGNMENT TO D6n & D7n  TO OVERIDE OTHER REQUEST
+'        IF SWITCHREV(3) = 1 THEN
+'         IF BLK(2) + BLK(12) < OCC THEN
+'          SM(108) = TUN
+'          SM(111) = TUR
+'          SM(112) = TUN
+'          SM(113) = TUN
+'          SM(114) = TUR
+'         END IF
+'        END IF
           ' if power on DS#2 align all switches to track #7
-        IF SWITCHREV(2) = 1 THEN
-         IF BLK(2) + BLK(12) < OCC THEN
-          SM(108) = TUN
-          SM(111) = TUR
-          SM(112) = TUN
-          SM(113) = TUN
-          SM(114) = TUN
-         END IF
-        END IF
+'        IF SWITCHREV(2) = 1 THEN
+'         IF BLK(2) + BLK(12) < OCC THEN
+'          SM(108) = TUN
+'          SM(111) = TUR
+'          SM(112) = TUN
+'          SM(113) = TUN
+'          SM(114) = TUN
+'         END IF
+'        END IF
 
        CASE 1: 'North Main to Carrolton RR
        IF BLK(2) <> OCC THEN
@@ -2391,11 +2438,12 @@ REM INITIALIZE SUSIC #0  Dispatcher Office
 REM INITIALIZE SUSIC #1  DeCoursey
    UA = 16          'USIC NODE ADDRESS
    NDP$ = "X"       'NODE DEFINITION PARAMETER SUSIC 32 port cards
-   NS = 2           'NUMBER OF CARD SETS OF 4
+   NS = 3           'NUMBER OF CARD SETS OF 4
    CT(1) = 153      'CARD SET IS IOIO
    CT(2) = 153      'CARD SET IS IOIO
+   CT(3) = 2        'CARD SET IS OXXX
    NI = 16          'NUMBER OF INPUT PORTS
-   NO = 16          'NUMBER OF OUTPUT PORTS
+   NO = 20          'NUMBER OF OUTPUT PORTS
    CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SUSIC
 
 REM INITALIZE SMINI #1  Walton, N LaGrange & SW(37)+SIG(38)
@@ -2544,7 +2592,7 @@ LOCATE 11, 37: PRINT "MENUE"
 LOCATE 13, 30: PRINT "1) Speed Match Locos"
 LOCATE 14, 30: PRINT "2) Test Outputs"
 LOCATE 15, 30: PRINT "3) Test SMINI boards"
-
+LOCATE 16, 30: PRINT "4) Test Signals "
 LOCATE 17, 30: PRINT "5) Set Fast Clock"
 LOCATE 18, 30: PRINT "9) Start C/MRI"
 LOCATE 19, 30: PRINT "0) QUIT"
@@ -2555,7 +2603,7 @@ Inpt$ = UCASE$(Inpt$)
 IF Inpt$ = "1" THEN CALL SPEEDTEST
 IF Inpt$ = "2" THEN CALL TESTOUTPUTS
 IF Inpt$ = "3" THEN CALL SMINItest
-
+IF Inpt$ = "4" THEN CALL TESTSIGNALS
 IF Inpt$ = "5" THEN CALL FastClk
 IF Inpt$ = "9" THEN GOTO 348
 IF Inpt$ = "0" THEN CLS : END
@@ -3692,7 +3740,6 @@ SWITCH61:
 ' check if dispatcher lock lever request is normal or reverse
   IF KEYSWITCH(61) = 1 THEN CLL61L = 1 ELSE CLL61L = 0  ' temp statement to release lock untill CTC is installed
   IF CLL61L = 0 THEN     'If lock lever is normal=0 then process lock protocol...
-
 
 '** PROCESS LOCK PROTOCOL #61
     TD(61) = 0                          ' make sure any time delay is reset
@@ -5431,6 +5478,111 @@ IF Inpt$ = "" GOTO 610
 650
 END SUB
 
+SUB TESTSIGNALS
+
+TESTLOOPCNT = 1:  ' set initial loop count to = 1
+TD(1) = 5: ' set time delay between changing signal aspects in seconds
+' *************** Call Header the test signals in a loop until there is a key press
+CALL HEADER
+ LOCATE 23, 27
+ PRINT "Press [ESC] to stop testing"
+
+TESTLOOP:
+
+SELECT CASE TESTLOOPCNT
+        CASE 1
+         ASPECT$ = "DARK  "
+         ASPECT = DRK
+         ASPECTB = DRK
+         ASPECTD = DRK
+         ASPECTDB = DRK
+         ASPECTTB = DRK
+         ASPECT2H = DRK
+        CASE 2
+         ASPECT$ = "RED   "
+         ASPECT = RED
+         ASPECTD = REDRED
+         ASPECTB = REDB
+         ASPECTDB = REDREDB
+         ASPECTTB = REDREDREDB
+         ASPECT2H = 2
+        CASE 3
+         ASPECT$ = "YELLOW"
+         ASPECT = YEL
+         ASPECTD = 15
+         ASPECTB = YELB
+         ASPECTDB = 18
+         ASPECTTB = 82
+         ASPECT2H = 3
+        CASE 4
+         ASPECT$ = "GREEN "
+         ASPECT = GRN
+         ASPECTD = 5
+         ASPECTB = GRNB
+         ASPECTDB = 9
+         ASPECTTB = 9 + 64
+         ASPECT2H = GRN
+
+END SELECT
+
+LOCATE 5, 1: PRINT "All Signals "; : PRINT ASPECT$
+        'WORTHVILLE
+        SIGR(10) = ASPECTB: 'THIS SIGNAL TO BECOME SIGR(30) WHEN OTHERS RENUMBERED
+        SIGL(29) = ASPECTB
+        SIGR(30) = ASPECTDB: SIGL(30) = ASPECTDB
+        SIGL(31) = ASPECTDB
+        SIGL(32) = ASPECTDB: SIGL(34) = ASPECTDB
+        SIGR(34) = ASPECTB: SIGR(32) = ASPECTDB
+        SIGR(36) = ASPECTB: SIGR(37) = ASPECTB
+        SIGL(36) = ASPECTDB
+        SIGR(38) = ASPECTB: SIGR(39) = ASPECTB
+        SIGL(38) = ASPECTDB
+        'SPARTA
+        SIGL(46) = ASPECTTB
+        SIGR(46) = ASPECTB: SIGR(42) = ASPECTB: SIGR(44) = ASPECTB
+        SIGL(42) = ASPECTB
+        SIGL(40) = ASPECTB: SIGL(41) = ASPECTB
+        SIGR(40) = ASPECTTB
+        'WALTON
+        SIGR(48) = ASPECTDB
+        SIGL(48) = ASPECTB: SIGL(49) = ASPECTB
+        SIGR(54) = ASPECTB: SIGR(55) = ASPECTB
+        SIGL(54) = ASPECTDB
+        'LATONIA
+        SIGL(55) = ASPECTB: SIGL(56) = ASPECTB: SIGL(57) = ASPECTB
+        SIGR(56) = ASPECTTB
+        SIGR(58) = ASPECTB: SIGL(58) = ASPECTDB
+        SIGR(60) = ASPECTDB: SIGL(60) = ASPECTB
+        SIGR(61) = ASPECTB
+        SIGL(62) = ASPECTDB: SIGR(62) = ASPECTB: SIGR(63) = ASPECTB
+        'DeCoursey
+        SIGL(68) = ASPECTDB: SIGL(70) = ASPECTDB
+        SIGR(68) = ASPECTDB: SIGR(70) = ASPECTDB
+        SIGL(72) = ASPECT2H: SIGL(74) = ASPECT2H: SIGL(76) = ASPECT2H: SIGL(78) = ASPECT2H: SIGL(80) = ASPECT2H
+        SIGR(76) = ASPECT2H: SIGR(78) = ASPECT2H: SIGR(82) = ASPECT2H
+        SIGL(84) = ASPECTB
+        
+
+CALL TIMERCNT
+
+IF TD(1) > 0 THEN GOTO 1998
+
+CALL WRITERR
+TESTLOOPCNT = TESTLOOPCNT + 1: ' increment the test loop count by 1
+IF TESTLOOPCNT > 4 THEN TESTLOOPCNT = 1
+' if the test loop count exceeded 4 then reset to 1
+TD(1) = 2: ' after Time Delay has reached 0 then reset to 2 seconds
+
+
+          REM *** ESCAPE KEY TRAP
+1998      IF INKEY$ = CHR$(27) THEN GOTO 2000
+
+GOTO TESTLOOP
+
+2000
+
+END SUB
+
 SUB TIMERCNT
 '************************** SUB TIMERCNT ******************************
 '*** UTILITY SUBROUTINE TO EXECUTE MULTIPLE ASYCHRONOUS TIME DELAYS ***
@@ -5627,15 +5779,18 @@ REM PACK SUSIC1 DeCoursey Yard
                OB(12) = SIGR(76) * B4 OR OB(12)
                OB(12) = SIGR(82) * B6 OR OB(12)
 
-                ' CARD #7, 0 outputs
-
+                ' CARD #7, 4 outputs
                OB(13) = SIGR(68)
-
                OB(14) = SIGR(70)
-
                OB(15) = SIGL(68)
-
                OB(16) = SIGL(70)
+
+                ' CARD #8, 4 outputs
+               OB(17) = SIGL(84)
+               OB(18) = 0
+               OB(19) = 0
+               OB(20) = SM(71)
+               
 
   IF Diagnose$ = "A" THEN
    LOCATE 16, 1: PRINT "SUSIC#1 OUTPUT BYTES CARD 1 =";
@@ -5650,9 +5805,13 @@ REM PACK SUSIC1 DeCoursey Yard
    PRINT " CARD 7 =";
    PRINT USING "####"; OB(13); : PRINT USING "####"; OB(14);
    PRINT USING "####"; OB(15); : PRINT USING "####"; OB(16);
+   LOCATE 18, 1: PRINT "SUSIC#1 OUTPUT BYTES CARD 9 =";
+   PRINT USING "####"; OB(17); : PRINT USING "####"; OB(18);
+   PRINT USING "####"; OB(19); : PRINT USING "####"; OB(20);
+
   END IF
 
-               UA = 16: NI = 16: NO = 16: REM NS = 4: CT(1) = 255
+               UA = 16: NI = 16: NO = 20: REM NS = 4: CT(1) = 255
                CALL OUTPUTS
 
 REM PACK SMINI#1 SWITCH MOTORS & SIGNALS for Walton & N Worthville
