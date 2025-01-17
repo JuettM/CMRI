@@ -98,7 +98,7 @@ REM** GLOBALIZE TIMER VARIABLES
      COMMON SHARED Hours, Mins, Seconds!, Ratio, StartFC!, FinishFC!, T1SAVE&
 
         COMMON SHARED VERSION$
-        VERSION$ = "V 2024-10-31"
+        VERSION$ = "V 2025-01-16"
      
 
 REM** DIMENSION RAILROAD DEVICES
@@ -137,6 +137,7 @@ REM** DIMENSION RAILROAD DEVICES
         REDB = 4: ' binary 100
         YELB = 2: ' binary 010
         GRNB = 1: ' binary 001
+        YELGRN = 3: ' binary 011  This a transition state between YELB and GRNB
         REDREDB = 36: ' signal is red over red / binary = 100100
         REDYELB = 34: ' signal is red over yellow / binary = 100010
         YELREDB = 20: ' signal is yellow over red / binary 010100
@@ -166,9 +167,9 @@ SIG18L: ' Campbellsburg S Tall & Dwarf
            IF SIGL(16) <> REDREDB THEN SIGL(17) = GRNB ELSE SIGL(17) = YELB
         END IF
 
-        IF SIGL(17) + SIGLold(17) = 3 THEN SIGL(17) = REDB
+        IF SIGL(17) + SIGLold(17) = YELGRN THEN SIGL(17) = REDB
         SIGLold(17) = SIGL(17)
-        IF SIGL(18) + SIGLold(18) = 3 THEN SIGL(18) = REDB
+        IF SIGL(18) + SIGLold(18) = YELGRN THEN SIGL(18) = REDB
         SIGLold(18) = SIGL(18)
 
 
@@ -182,7 +183,7 @@ SIG20L: ' Campbellsburg dwarf
            IF SIGL(18) <> REDB THEN SIGL(20) = GRNB ELSE SIGL(20) = YELB
         END IF
 
-        IF SIGL(20) + SIGLold(20) = 3 THEN SIGL(20) = REDB
+        IF SIGL(20) + SIGLold(20) = YELGRN THEN SIGL(20) = REDB
         SIGLold(20) = SIGL(20)
 
 SIG21L:         ' Campbellsburg dwarf
@@ -194,7 +195,7 @@ SIG21L:         ' Campbellsburg dwarf
            IF SIGL(17) <> REDB THEN SIGL(21) = GRNB ELSE SIGL(21) = YELB
         END IF
 
-        IF SIGL(21) + SIGLold(21) = 3 THEN SIGL(21) = REDB
+        IF SIGL(21) + SIGLold(21) = YELGRN THEN SIGL(21) = REDB
         SIGLold(21) = SIGL(21)
 
 
@@ -238,7 +239,7 @@ SIG29L: ' DWARF PROTECTING CRR
          SIGL(29) = REDB
         END IF
 
-        IF SIGL(29) + SIGLold(29) = 3 THEN SIGL(29) = REDB
+        IF SIGL(29) + SIGLold(29) = YELGRN THEN SIGL(29) = REDB
         SIGLold(29) = SIGL(29)
 
 SIG30L: ' S Worthville SIGL(30) DOUBLE HEAD
@@ -267,7 +268,7 @@ SIG31L:  ' DWARF
        IF SMFBN(29) = TUN THEN GOTO SIG32L
        IF SIGL(26) <> REDREDREDB THEN SIGL(31) = GRNB ELSE SIGL(31) = YELB
 
-        IF SIGL(31) + SIGLold(31) = 3 THEN SIGL(31) = REDB
+        IF SIGL(31) + SIGLold(31) = YELGRN THEN SIGL(31) = REDB
         SIGLold(31) = SIGL(31)
 
 SIG32L:
@@ -400,9 +401,9 @@ SIG40L:
            IF SIGL(38) <> REDREDB THEN SIGL(41) = GRNB ELSE SIGL(41) = YELB
         END IF
 
-        IF SIGL(40) + SIGLold(40) = 3 THEN SIGL(40) = REDB
+        IF SIGL(40) + SIGLold(40) = YELGRN THEN SIGL(40) = REDB
         SIGLold(40) = SIGL(40)
-        IF SIGL(41) + SIGLold(41) = 3 THEN SIGL(41) = REDB
+        IF SIGL(41) + SIGLold(41) = YELGRN THEN SIGL(41) = REDB
         SIGLold(41) = SIGL(41)
 
 
@@ -415,7 +416,7 @@ SIG42L: ' dwarf west (passenger) siding
            IF SIGL(40) <> REDB THEN SIGL(42) = GRNB ELSE SIGL(42) = YELB
         END IF
 
-        IF SIGL(42) + SIGLold(42) = 3 THEN SIGL(42) = REDB
+        IF SIGL(42) + SIGLold(42) = YELGRN THEN SIGL(42) = REDB
         SIGLold(42) = SIGL(42)
 
 
@@ -457,11 +458,11 @@ SIG48L: ' S Walton
            IF SIGL(46) <> REDREDREDB THEN SIGL(49) = GRNB ELSE SIGL(49) = YELB
         END IF
 
-        IF SIGL(48) + SIGLold(48) = 3 THEN SIGL(48) = REDB
+        IF SIGL(48) + SIGLold(48) = YELGRN THEN SIGL(48) = REDB
         SIGLold(48) = SIGL(48)
-        IF SIGL(49) + SIGLold(49) = 3 THEN SIGL(49) = REDB
+        IF SIGL(49) + SIGLold(49) = YELGRN THEN SIGL(49) = REDB
         SIGLold(49) = SIGL(49)
-        IF SIGL(50) + SIGLold(50) = 3 THEN SIGL(50) = REDB
+        IF SIGL(50) + SIGLold(50) = YELGRN THEN SIGL(50) = REDB
         SIGLold(50) = SIGL(50)
 
 
@@ -680,7 +681,7 @@ SIG70R: ' DeCoursey crossover double head S main
         SIGR(70) = REDREDB
         IF SMFBN(67) = TUN THEN
           IF SMFBN(69) = TUN THEN
-            IF (BLK(17) + BLK(13) + BLK(173) + BLK(3)) > 0 THEN GOTO SIG68R
+            IF (BLK(16) + BLK(13) + BLK(173) + BLK(3)) > 0 THEN GOTO SIG68R
            ELSE
             IF (BLK(16) + BLK(13) + BLK(173) + BLK(15) + BLK(11) + BLK(2)) > 0 THEN GOTO SIG68R
             IF MAINSOUTH = 1 THEN
@@ -691,7 +692,7 @@ SIG70R: ' DeCoursey crossover double head S main
               IF TRACKSOUTH(4) = 1 AND BLK(7) = 0 THEN SIGR(70) = REDYELB: GOTO SIG68R
               IF TRACKSOUTH(5) = 1 AND BLK(8) = 0 THEN SIGR(70) = REDYELB: GOTO SIG68R
               IF TRACKSOUTH(6) = 1 AND BLK(182) = 0 THEN SIGR(70) = REDYELB: GOTO SIG68R
-              IF TRACKSOUTH(7) = 1 AND BLK(10) = 0 THEN SIGR(70) = REDYELB: GOTO SIG68R
+              IF TRACKSOUTH(7) = 1 AND BLK(181) = 0 THEN SIGR(70) = REDYELB: GOTO SIG68R
              ELSE
               'SIGR(70) = REDREDB
             END IF
@@ -722,9 +723,10 @@ SIG68R: ' DeCoursey crossover double head N main
          ELSE
           ' when SM(67) IS REVERSED (TUR)
           IF SMFBN(69) = TUN THEN
-            IF (BLK(16) + BLK(17) + BLK(13) + BLK(173) + BLK(3)) > 0 THEN GOTO SIG62R
+            IF (BLK(17) + BLK(16) + BLK(13) + BLK(173) + BLK(3)) > 0 THEN GOTO SIG62R
            ELSE
-            IF (BLK(16) + BLK(17) + BLK(13) + BLK(173) + BLK(11) + BLK(2)) > 0 THEN GOTO SIG62R
+           ' SM(69) IS REVERSED ALSO
+            IF (BLK(17) + BLK(16) + BLK(13) + BLK(173) + BLK(11) + BLK(2)) > 0 THEN GOTO SIG62R
             IF MAINSOUTH = 1 THEN
               IF TRACKSOUTH(1) = 1 AND BLK(4) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
               IF TRACKSOUTH(2) = 1 AND BLK(5) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
@@ -732,7 +734,7 @@ SIG68R: ' DeCoursey crossover double head N main
               IF TRACKSOUTH(4) = 1 AND BLK(7) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
               IF TRACKSOUTH(5) = 1 AND BLK(8) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
               IF TRACKSOUTH(6) = 1 AND BLK(182) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
-              IF TRACKSOUTH(7) = 1 AND BLK(10) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
+              IF TRACKSOUTH(7) = 1 AND BLK(181) = 0 THEN SIGR(68) = REDYELB: GOTO SIG62R
              ELSE
               SIGR(68) = REDREDB
             END IF
@@ -1000,7 +1002,7 @@ IF Signal$ = "N" GOTO 777
         IF BLK(37) + BLK(38) + BLK(39) + BLK(40) + BLK(41) + BLK(42) + BLK(43) + BLK(44) + BLK(45) = 0 THEN SIGL(40) = DRK: SIGL(41) = DRK: SIGL(42) = DRK
         IF BLK(37) + BLK(38) + BLK(39) + BLK(40) + BLK(41) + BLK(42) + BLK(43) + BLK(44) = 0 THEN SIGR(42) = DRK: SIGR(44) = DRK: SIGR(46) = DRK
         IF BLK(33) + BLK(37) = 0 THEN SIGL(46) = DRK
-        IF BLK(28) + BLK(29) + BLK(32) = 0 THEN SIGL(48) = DRK: SIGL(49) = DRK
+        IF BLK(26) + BLK(28) + BLK(29) + BLK(30) + BLK(32) = 0 THEN SIGL(48) = DRK: SIGL(49) = DRK
         IF BLK(44) + BLK(45) = 0 THEN SIGR(40) = DRK
         IF BLK(33) + BLK(32) = 0 THEN SIGR(48) = DRK
         IF BLK(22) + BLK(23) + BLK(24) + BLK(167) + BLK(26) + BLK(166) = 0 THEN SIGL(54) = DRK
@@ -2436,7 +2438,7 @@ REM INITIALIZE SUSIC #0  Dispatcher Office
    CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SUSIC
 
 REM INITIALIZE SUSIC #1  DeCoursey
-   UA = 16          'USIC NODE ADDRESS
+   UA = 1           'USIC NODE ADDRESS
    NDP$ = "X"       'NODE DEFINITION PARAMETER SUSIC 32 port cards
    NS = 3           'NUMBER OF CARD SETS OF 4
    CT(1) = 153      'CARD SET IS IOIO
@@ -2446,23 +2448,13 @@ REM INITIALIZE SUSIC #1  DeCoursey
    NO = 20          'NUMBER OF OUTPUT PORTS
    CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SUSIC
 
-REM INITALIZE SMINI #1  Walton, N LaGrange & SW(37)+SIG(38)
-   UA = 1           'SMINI NODE ADDRESS
-   NDP$ = "M"       'NODE DEFINITION PARAMETER
-   NS = 1           'NUMBER OF 2-LEAD SEARCHLIGHT SIGNALS
-   NI = 3           'NUMBER OF INPUT PORTS
-   NO = 6           'NUMBER OF OUTPUT PORTS
-   'CT(1) = 0: CT(2) = 0: CT(3) = 0: CT(4) = 0: CT(5) = 0: CT(6) = 0
-   ' line above for search light signal definitions
-   CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SMINI
-
 REM INITALIZE SMINI #2   Sparta & LaGrange
    UA = 2           'SMINI NODE ADDRESS
    NDP$ = "M"       'NODE DEFINITION PARAMETER
    NS = 0           'NUMBER OF 2-LEAD SEARCHLIGHT SIGNALS
    NI = 3           'NUMBER OF INPUT PORTS
    NO = 6           'NUMBER OF OUTPUT PORTS
-   'CT(1) = 0: CT(2) = 0: CT(3) = 0: CT(4) = 0: CT(5) = 0: CT(6) = 0
+   CT(1) = 0: CT(2) = 0: CT(3) = 0: CT(4) = 0: CT(5) = 0: CT(6) = 0
    ' line above for search light signal definitions
    CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SMINI
 
@@ -2566,6 +2558,16 @@ REM INITALIZE SMINI #12   LaGrange & Sparta
    ' line above for search light signal definitions
    CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SMINI
 
+REM INITALIZE SMINI #16  Walton, N LaGrange & SW(37)+SIG(38)
+   UA = 16           'SMINI NODE ADDRESS
+   NDP$ = "M"       'NODE DEFINITION PARAMETER
+   NS = 0           'NUMBER OF 2-LEAD SEARCHLIGHT SIGNALS
+   NI = 3           'NUMBER OF INPUT PORTS
+   NO = 6           'NUMBER OF OUTPUT PORTS
+   CT(1) = 0: CT(2) = 0: CT(3) = 0: CT(4) = 0: CT(5) = 0: CT(6) = 0
+   ' line above for search light signal definitions
+   CALL INIT        'INVOKE INITIALIZATION SUBROUTINE FOR SMINI
+
    CALL HEADER
        LOCATE 6, 25: PRINT "COMPUTER MODEL RAILROAD INTERFACE"
        LOCATE 7, 25: PRINT "NODE INITIALIZATION IS COMPLETE"
@@ -2591,7 +2593,7 @@ LOCATE 17, 69: PRINT "RATIO "; : PRINT USING "#"; Ratio; : PRINT ":1"
 LOCATE 11, 37: PRINT "MENUE"
 LOCATE 13, 30: PRINT "1) Speed Match Locos"
 LOCATE 14, 30: PRINT "2) Test Outputs"
-LOCATE 15, 30: PRINT "3) Test SMINI boards"
+
 LOCATE 16, 30: PRINT "4) Test Signals "
 LOCATE 17, 30: PRINT "5) Set Fast Clock"
 LOCATE 18, 30: PRINT "9) Start C/MRI"
@@ -2602,7 +2604,7 @@ LOCATE 19, 30: PRINT "0) QUIT"
 Inpt$ = UCASE$(Inpt$)
 IF Inpt$ = "1" THEN CALL SPEEDTEST
 IF Inpt$ = "2" THEN CALL TESTOUTPUTS
-IF Inpt$ = "3" THEN CALL SMINItest
+
 IF Inpt$ = "4" THEN CALL TESTSIGNALS
 IF Inpt$ = "5" THEN CALL FastClk
 IF Inpt$ = "9" THEN GOTO 348
@@ -2747,40 +2749,129 @@ REM**DISPLAY INPUT BYTES ON MONITOR SCREEN if you are not displaying equip statu
 REM UNPACK INPUT BYTES
      CTCPB(1) = IB(1) \ B0 AND W1    'NODE 0 CARD 0 PORT A
 
-REM**READ INPUT BYTES FROM SMINI #1, 3 INPUT PORTS at Walton
- UA = 1: NI = 3: 'CARD 1, 3 INPUTS
- CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3)
-REM**DISPLAY INPUT BYTES ON MONITOR SCREEN
-  IF Diagnose$ = "B" THEN
-   LOCATE 5, 1: PRINT "SMINI  #1 INPUT BYTES =";
+REM**READ INPUT BYTES FROM NODE 1 SUSIC 4 INPUT PORTS DeCoursey Yard
+ UA = 1: NI = 16 'CARD 0, 4 INPUTS CARD 4 X 4 = 16 INPUTS
+ CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3), IB(4).....
+REM**DISPLAY INPUT BYTES ON MONITOR SCREEN if you are not displaying equip status
+  IF Diagnose$ = "A" THEN
+   LOCATE 14, 1: PRINT "SUSIC #1 INPUT BYTES CARD 0 =";
    PRINT USING "####"; IB(1); : PRINT USING "####"; IB(2);
-   PRINT USING "####"; IB(3);
+   PRINT USING "####"; IB(3); : PRINT USING "####"; IB(4);
+   PRINT " CARD 2 =";
+   PRINT USING "####"; IB(5); : PRINT USING "####"; IB(6);
+   PRINT USING "####"; IB(7); : PRINT USING "####"; IB(8);
+   LOCATE 15, 1: PRINT "SUSIC #1 INPUT BYTES CARD 4 =";
+   PRINT USING "####"; IB(9); : PRINT USING "####"; IB(10);
+   PRINT USING "####"; IB(11); : PRINT USING "####"; IB(12);
+   PRINT " CARD 6 =";
+   PRINT USING "####"; IB(13); : PRINT USING "####"; IB(14);
+   PRINT USING "####"; IB(15); : PRINT USING "####"; IB(16);
   END IF
+
 REM UNPACK INPUT BYTES
-                                            'NODE 1 PORT A
-     KEYSWITCH(49) = IB(1) \ B0 AND W1
-     SWITCHREV(49) = IB(1) \ B1 AND W1
-     SMFBN(49) = IB(1) \ B2 AND W1
-     KEYSWITCH(47) = IB(1) \ B3 AND W1
-     SWITCHREV(47) = IB(1) \ B4 AND W1
-     SMFBN(47) = IB(1) \ B5 AND W1
-     SMFBN(81) = IB(1) \ B6 AND W1
+     BLK(1) = IB(1) \ B0 AND W1    'NODE 16 CARD 0 PORT A
+     BLK(2) = IB(1) \ B1 AND W1
+     BLK(3) = IB(1) \ B2 AND W1
+     BLK(4) = IB(1) \ B3 AND W1
+     BLK(5) = IB(1) \ B4 AND W1
+     BLK(6) = IB(1) \ B5 AND W1
+     BLK(7) = IB(1) \ B6 AND W1
+     BLK(8) = IB(1) \ B7 AND W1
 
-                                            'NODE 1 PORT B
-                                        
-     KEYSWITCH(37) = IB(2) \ B0 AND W1:  ' WORTHVILLE SW 37
-     SWITCHREV(37) = IB(2) \ B1 AND W1
-     SMFBN(37) = IB(2) \ B2 AND W1
-                                            'NODE 1 PORT C
-     BLK(26) = IB(3) \ B0 AND W1:       'Walton
-     BLK(28) = IB(3) \ B1 AND W1
-     BLK(29) = IB(3) \ B2 AND W1
-     BLK(30) = IB(3) \ B3 AND W1
-     BLK(31) = IB(3) \ B4 AND W1
-     BLK(32) = IB(3) \ B5 AND W1
-     BLK(33) = IB(3) \ B6 AND W1
+     BLK(9) = IB(2) \ B0 AND W1    'NODE 16 CARD 0 PORT B
+     BLK(10) = IB(2) \ B1 AND W1
+     BLK(11) = IB(2) \ B2 AND W1
+     BLK(12) = IB(2) \ B3 AND W1
+     BLK(171) = IB(2) \ B4 AND W1
 
-REM**READ INPUT BYTES FROM SMINI #1, 3 INPUT PORTS at Sparta
+     BLK(170) = IB(3) \ B0 AND W1       ' NODE 16 CARD 0 PORT C
+     BLK(169) = IB(3) \ B1 AND W1
+     BLK(168) = IB(3) \ B2 AND W1
+     BLK(167) = IB(3) \ B3 AND W1
+     BLK(166) = IB(3) \ B4 AND W1
+     BLK(20) = IB(3) \ B7 AND W1
+
+     BLK(21) = IB(4) \ B0 AND W1        'NODE 16 CARD 0 PORT D
+     BLK(22) = IB(4) \ B1 AND W1
+     BLK(23) = IB(4) \ B2 AND W1
+     BLK(24) = IB(4) \ B3 AND W1
+
+     MAINSOUTH = IB(5) \ B0 AND W1          'NODE 16 CARD 2 PORT A
+     TRACKNORTH(1) = IB(5) \ B1 AND W1
+     TRACKNORTH(2) = IB(5) \ B2 AND W1
+     TRACKNORTH(3) = IB(5) \ B3 AND W1
+     TRACKNORTH(4) = IB(5) \ B4 AND W1
+     TRACKNORTH(5) = IB(5) \ B5 AND W1
+     TRACKNORTH(6) = IB(5) \ B6 AND W1
+     TRACKNORTH(7) = IB(5) \ B7 AND W1
+
+     TRACKSOUTH(1) = IB(6) \ B0 AND W1          'NODE 16 CARD 2 PORT B
+     TRACKSOUTH(2) = IB(6) \ B1 AND W1
+     TRACKSOUTH(3) = IB(6) \ B2 AND W1
+     TRACKSOUTH(4) = IB(6) \ B3 AND W1
+     TRACKSOUTH(5) = IB(6) \ B4 AND W1
+     TRACKSOUTH(6) = IB(6) \ B5 AND W1
+     TRACKSOUTH(7) = IB(6) \ B6 AND W1
+     MAINNORTH = IB(6) \ B7 AND W1
+
+     BLK(13) = IB(7) \ B0 AND W1:       'NODE 16 CARD 2 PORT C
+     BLK(14) = IB(7) \ B1 AND W1:       'Exit from DeCoursey Yard toward Latonia
+     BLK(15) = IB(7) \ B2 AND W1
+     BLK(16) = IB(7) \ B3 AND W1
+     BLK(17) = IB(7) \ B4 AND W1
+     BLK(18) = IB(7) \ B5 AND W1
+     BLK(19) = IB(7) \ B6 AND W1
+     BLK(173) = IB(7) \ B7 AND W1
+
+     SMFBN(67) = IB(8) \ B0 AND W1      'NODE 16 CARD 2 PORT D
+     SMFBN(69) = IB(8) \ B1 AND W1
+     SMFBN(71) = IB(8) \ B2 AND W1
+
+     SWITCHN(1) = IB(9) \ B0 AND W1    'NODE 16 CARD 4 PORT A
+     SWITCHREV(1) = IB(9) \ B1 AND W1
+     SWITCHN(2) = IB(9) \ B2 AND W1
+     SWITCHREV(2) = IB(9) \ B3 AND W1
+     SWITCHN(3) = IB(9) \ B4 AND W1
+     SWITCHREV(3) = IB(9) \ B5 AND W1
+     KEYSWITCH(67) = IB(9) \ B6 AND W1
+     SWITCHREV(67) = IB(9) \ B7 AND W1
+
+     SMFBN(115) = IB(10) \ B0 AND W1  'NODE 16 CARD 4 PORT B
+     SMFBN(116) = IB(10) \ B1 AND W1
+     NUL = IB(10) \ B2 AND W1
+     SMFBN(118) = IB(10) \ B3 AND W1
+     PB(1) = IB(10) \ B6 AND W1
+     PB(2) = IB(10) \ B7 AND W1
+
+     PB(3) = IB(11) \ B0 AND W1  'NODE 16 CARD 4 PORT C
+     PB(4) = IB(11) \ B1 AND W1
+     PB(5) = IB(11) \ B2 AND W1
+     PB(6) = IB(11) \ B3 AND W1
+     PB(7) = IB(11) \ B4 AND W1
+     PB(8) = IB(11) \ B5 AND W1
+     PB(9) = IB(11) \ B6 AND W1
+     PB(10) = IB(11) \ B7 AND W1
+
+     PB(11) = IB(12) \ B0 AND W1  'NODE 16 CARD 4 PORT D
+     PB(12) = IB(12) \ B1 AND W1
+     PB(13) = IB(12) \ B2 AND W1
+     PB(14) = IB(12) \ B3 AND W1
+     PB(15) = IB(12) \ B4 AND W1
+     PB(16) = IB(12) \ B5 AND W1
+     PB(17) = IB(12) \ B6 AND W1
+     PB(18) = IB(12) \ B7 AND W1
+
+     BLK(175) = IB(13) \ B0 AND W1:    'NODE 16 CARD 6 PORT A
+     BLK(176) = IB(13) \ B1 AND W1: 'EK Track #1 yet to install ODD
+     BLK(177) = IB(13) \ B2 AND W1: 'EK Track #2 yet to install ODD
+     BLK(178) = IB(13) \ B3 AND W1: 'EK Track #3 yet to install ODD
+     BLK(179) = IB(13) \ B4 AND W1: 'EK Track #4 yet to install ODD
+     BLK(180) = IB(13) \ B5 AND W1: 'EK Track #5 yet to install ODD
+     BLK(181) = IB(13) \ B6 AND W1: 'D7 North
+     BLK(182) = IB(13) \ B7 AND W1: 'D6 South
+
+
+REM**READ INPUT BYTES FROM SMINI #2, 3 INPUT PORTS at Sparta
  UA = 2: NI = 3: 'CARD 1, 3 INPUTS
  CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3)
 REM**DISPLAY INPUT BYTES ON MONITOR SCREEN
@@ -3054,7 +3145,7 @@ REM UNPACK INPUT BYTES
      BLK(111) = IB(3) \ B2 AND W1
 
 
-REM**READ INPUT BYTES FROM SMINI #1, 3 INPUT PORTS at LaGrange & Sparta
+REM**READ INPUT BYTES FROM SMINI #1, 3 INPUT PORTS at south LaGrange & Sparta
  UA = 12: NI = 3: 'CARD 1, 3 INPUTS
  CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3)
 REM**DISPLAY INPUT BYTES ON MONITOR SCREEN
@@ -3077,127 +3168,40 @@ REM UNPACK INPUT BYTES
      SMFBN(13) = IB(2) \ B0 AND W1         'NODE 12 PORT B
      SMFBN(83) = IB(2) \ B1 AND W1
      
-
-REM**READ INPUT BYTES FROM NODE 16 SUSIC 4 INPUT PORTS DeCoursey Yard
- UA = 16: NI = 16 'CARD 0, 4 INPUTS CARD 4 X 4 = 16 INPUTS
- CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3), IB(4).....
-REM**DISPLAY INPUT BYTES ON MONITOR SCREEN if you are not displaying equip status
-  IF Diagnose$ = "A" THEN
-   LOCATE 14, 1: PRINT "SUSIC #1 INPUT BYTES CARD 0 =";
+REM**READ INPUT BYTES FROM SMINI #16, 3 INPUT PORTS at Walton
+ UA = 16: NI = 3: 'CARD 1, 3 INPUTS
+ CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3)
+REM**DISPLAY INPUT BYTES ON MONITOR SCREEN
+  IF Diagnose$ = "B" THEN
+   LOCATE 5, 1: PRINT "SMINI  #1 INPUT BYTES =";
    PRINT USING "####"; IB(1); : PRINT USING "####"; IB(2);
-   PRINT USING "####"; IB(3); : PRINT USING "####"; IB(4);
-   PRINT " CARD 2 =";
-   PRINT USING "####"; IB(5); : PRINT USING "####"; IB(6);
-   PRINT USING "####"; IB(7); : PRINT USING "####"; IB(8);
-   LOCATE 15, 1: PRINT "SUSIC #1 INPUT BYTES CARD 4 =";
-   PRINT USING "####"; IB(9); : PRINT USING "####"; IB(10);
-   PRINT USING "####"; IB(11); : PRINT USING "####"; IB(12);
-   PRINT " CARD 6 =";
-   PRINT USING "####"; IB(13); : PRINT USING "####"; IB(14);
-   PRINT USING "####"; IB(15); : PRINT USING "####"; IB(16);
+   PRINT USING "####"; IB(3);
   END IF
-  
 REM UNPACK INPUT BYTES
-     BLK(1) = IB(1) \ B0 AND W1    'NODE 16 CARD 0 PORT A
-     BLK(2) = IB(1) \ B1 AND W1
-     BLK(3) = IB(1) \ B2 AND W1
-     BLK(4) = IB(1) \ B3 AND W1
-     BLK(5) = IB(1) \ B4 AND W1
-     BLK(6) = IB(1) \ B5 AND W1
-     BLK(7) = IB(1) \ B6 AND W1
-     BLK(8) = IB(1) \ B7 AND W1
+                                            'NODE 1 PORT A
+     KEYSWITCH(49) = IB(1) \ B0 AND W1
+     SWITCHREV(49) = IB(1) \ B1 AND W1
+     SMFBN(49) = IB(1) \ B2 AND W1
+     KEYSWITCH(47) = IB(1) \ B3 AND W1
+     SWITCHREV(47) = IB(1) \ B4 AND W1
+     SMFBN(47) = IB(1) \ B5 AND W1
+     SMFBN(81) = IB(1) \ B6 AND W1
 
-     BLK(9) = IB(2) \ B0 AND W1    'NODE 16 CARD 0 PORT B
-     BLK(10) = IB(2) \ B1 AND W1
-     BLK(11) = IB(2) \ B2 AND W1
-     BLK(12) = IB(2) \ B3 AND W1
-     BLK(171) = IB(2) \ B4 AND W1
+                                            'NODE 1 PORT B
 
-     BLK(170) = IB(3) \ B0 AND W1       ' NODE 16 CARD 0 PORT C
-     BLK(169) = IB(3) \ B1 AND W1
-     BLK(168) = IB(3) \ B2 AND W1
-     BLK(167) = IB(3) \ B3 AND W1
-     BLK(166) = IB(3) \ B4 AND W1
-     BLK(20) = IB(3) \ B7 AND W1
+     KEYSWITCH(37) = IB(2) \ B0 AND W1:  ' WORTHVILLE SW 37
+     SWITCHREV(37) = IB(2) \ B1 AND W1
+     SMFBN(37) = IB(2) \ B2 AND W1
+                                            'NODE 1 PORT C
+     BLK(26) = IB(3) \ B0 AND W1:       'Walton
+     BLK(28) = IB(3) \ B1 AND W1
+     BLK(29) = IB(3) \ B2 AND W1
+     BLK(30) = IB(3) \ B3 AND W1
+     BLK(31) = IB(3) \ B4 AND W1
+     BLK(32) = IB(3) \ B5 AND W1
+     BLK(33) = IB(3) \ B6 AND W1
 
-     BLK(21) = IB(4) \ B0 AND W1        'NODE 16 CARD 0 PORT D
-     BLK(22) = IB(4) \ B1 AND W1
-     BLK(23) = IB(4) \ B2 AND W1
-     BLK(24) = IB(4) \ B3 AND W1
 
-     MAINSOUTH = IB(5) \ B0 AND W1          'NODE 16 CARD 2 PORT A
-     TRACKNORTH(1) = IB(5) \ B1 AND W1
-     TRACKNORTH(2) = IB(5) \ B2 AND W1
-     TRACKNORTH(3) = IB(5) \ B3 AND W1
-     TRACKNORTH(4) = IB(5) \ B4 AND W1
-     TRACKNORTH(5) = IB(5) \ B5 AND W1
-     TRACKNORTH(6) = IB(5) \ B6 AND W1
-     TRACKNORTH(7) = IB(5) \ B7 AND W1
-
-     TRACKSOUTH(1) = IB(6) \ B0 AND W1          'NODE 16 CARD 2 PORT B
-     TRACKSOUTH(2) = IB(6) \ B1 AND W1
-     TRACKSOUTH(3) = IB(6) \ B2 AND W1
-     TRACKSOUTH(4) = IB(6) \ B3 AND W1
-     TRACKSOUTH(5) = IB(6) \ B4 AND W1
-     TRACKSOUTH(6) = IB(6) \ B5 AND W1
-     TRACKSOUTH(7) = IB(6) \ B6 AND W1
-     MAINNORTH = IB(6) \ B7 AND W1
-
-     BLK(13) = IB(7) \ B0 AND W1:       'NODE 16 CARD 2 PORT C
-     BLK(14) = IB(7) \ B1 AND W1:       'Exit from DeCoursey Yard toward Latonia
-     BLK(15) = IB(7) \ B2 AND W1
-     BLK(16) = IB(7) \ B3 AND W1
-     BLK(17) = IB(7) \ B4 AND W1
-     BLK(18) = IB(7) \ B5 AND W1
-     BLK(19) = IB(7) \ B6 AND W1
-     BLK(173) = IB(7) \ B7 AND W1
-
-     SMFBN(67) = IB(8) \ B0 AND W1      'NODE 16 CARD 2 PORT D
-     SMFBN(69) = IB(8) \ B1 AND W1
-     SMFBN(71) = IB(8) \ B2 AND W1
-   
-     SWITCHN(1) = IB(9) \ B0 AND W1    'NODE 16 CARD 4 PORT A
-     SWITCHREV(1) = IB(9) \ B1 AND W1
-     SWITCHN(2) = IB(9) \ B2 AND W1
-     SWITCHREV(2) = IB(9) \ B3 AND W1
-     SWITCHN(3) = IB(9) \ B4 AND W1
-     SWITCHREV(3) = IB(9) \ B5 AND W1
-     KEYSWITCH(67) = IB(9) \ B6 AND W1
-     SWITCHREV(67) = IB(9) \ B7 AND W1
-
-     SMFBN(115) = IB(10) \ B0 AND W1  'NODE 16 CARD 4 PORT B
-     SMFBN(116) = IB(10) \ B1 AND W1
-     NUL = IB(10) \ B2 AND W1
-     SMFBN(118) = IB(10) \ B3 AND W1
-     PB(1) = IB(10) \ B6 AND W1
-     PB(2) = IB(10) \ B7 AND W1
-
-     PB(3) = IB(11) \ B0 AND W1  'NODE 16 CARD 4 PORT C
-     PB(4) = IB(11) \ B1 AND W1
-     PB(5) = IB(11) \ B2 AND W1
-     PB(6) = IB(11) \ B3 AND W1
-     PB(7) = IB(11) \ B4 AND W1
-     PB(8) = IB(11) \ B5 AND W1
-     PB(9) = IB(11) \ B6 AND W1
-     PB(10) = IB(11) \ B7 AND W1
-
-     PB(11) = IB(12) \ B0 AND W1  'NODE 16 CARD 4 PORT D
-     PB(12) = IB(12) \ B1 AND W1
-     PB(13) = IB(12) \ B2 AND W1
-     PB(14) = IB(12) \ B3 AND W1
-     PB(15) = IB(12) \ B4 AND W1
-     PB(16) = IB(12) \ B5 AND W1
-     PB(17) = IB(12) \ B6 AND W1
-     PB(18) = IB(12) \ B7 AND W1
-
-     BLK(175) = IB(13) \ B0 AND W1:    'NODE 16 CARD 6 PORT A
-     BLK(176) = IB(13) \ B1 AND W1: 'EK Track #1 yet to install ODD
-     BLK(177) = IB(13) \ B2 AND W1: 'EK Track #2 yet to install ODD
-     BLK(178) = IB(13) \ B3 AND W1: 'EK Track #3 yet to install ODD
-     BLK(179) = IB(13) \ B4 AND W1: 'EK Track #4 yet to install ODD
-     BLK(180) = IB(13) \ B5 AND W1: 'EK Track #5 yet to install ODD
-     BLK(181) = IB(13) \ B6 AND W1: 'D7 North
-     BLK(182) = IB(13) \ B7 AND W1: 'D6 South
 
      
 
@@ -3292,214 +3296,6 @@ REM If crossing approach and island both clear then clear stick
 
 
 REM processing complete return controll to calling program
-
-END SUB
-
-SUB SMINItest
-
-DIM PND$(12)
- PND$(1) = "A": PND$(2) = "B": PND$(3) = "C":
- PND$(4) = "D": PND$(5) = "E": PND$(6) = "F"
- 
-CLS
-LOCATE 1, 34: PRINT "TESTING SMINI"
-LOCATE 3, 34: PRINT "SMINI Address    "
-
-LOCATE 3, 47
-805 INPUT ; ""; UA
- IF UA < 0 OR UA > 20 GOTO 805
-NO = 6: NI = 3: 'CARD UA, 6 OUTPUTS & 3 INPUTS
-Delay! = .2
-
-REM *******BEGIN TEST LOOP*******SMINI #1
- LOCATE 23, 27
- PRINT "Press [ESC] to stop testing"
-
-FOR J = 1 TO 5
-     LOCATE 23, 27
-     PRINT "Press [ESC] to stop testing"
-     IF INKEY$ = CHR$(27) THEN GOTO 1000
-
-       LOCATE 15, 52: : PRINT "Pass # "; : PRINT J
-       LOCATE 15, 63: PRINT "Delay "; : PRINT USING "#.##"; Delay!
-     REM**INITIALIZE LEDS TO OFF
-       FOR I = 1 TO 3
-        OB(I) = 0
-       NEXT I
-     'CALL OUTPUTS: Delay! = 1!: GOSUB 890
-     
-     REM**OUTPUT PORT TO BE TESTED IN A LOOP**
-       
-       FOR PN = 1 TO 3
-
-     REM**INCREMENT DISPLAYED BIT NUMBER IN A LOOP
-       FOR N = 0 TO 7
-
-     REM**OUTPUT TEST STATUS TO MONITOR
-       LOCATE 15, 25: PRINT "PORT = "; PND$(PN); " BIT NUMBER = "; N
-
-     REM**SET UP TEST LED PATTERN
-       OB(PN) = 2 ^ N    'Number 2 raised to power N
-            LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
-            PRINT USING "####"; OB(1); : PRINT USING "####"; OB(2); : PRINT USING "####"; OB(3);
-            
-     REM**OUTPUT LED DISPLAY DATA TO SMINI
-       CALL OUTPUTS
-
-     REM**DELAY LOOP SO THAT YOU CAN OBSERVE LED STATUS
-       GOSUB 890
-          REM *** ESCAPE KEY TRAP
-          IF INKEY$ = CHR$(27) THEN GOTO 1000
-
-        REM**COMPLETE BIT POSITION LOOP
-          
-       NEXT N
-
-     REM**TURN OFF CURRENT PORT BEFORE INCREMENT TO THE NEXT PORT
-       OB(PN) = 0
-     REM**INCREMENT TO NEXT PORT
-       NEXT PN
-
-     REM reduce time delay
-       Delay! = Delay! - .05
-
-  NEXT J
-
-
-    REM TURN ON ALL SMINI LEDS
-        OB(1) = 255: OB(2) = 255: OB(3) = 255
-            
-            LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
-            PRINT USING "####"; OB(1); : PRINT USING "####"; OB(2); : PRINT USING "####"; OB(3);
-            
-
-        CALL OUTPUTS: Delay! = 5!: GOSUB 890
-
-   REM TURN OFF ALL SMINI LEDS
-       OB(1) = 0: OB(2) = 0: OB(3) = 0
-            LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
-            PRINT USING "####"; OB(1); : PRINT USING "####"; OB(2); : PRINT USING "####"; OB(3);
-            
-            
-       CALL OUTPUTS: Delay! = .5: GOSUB 890
-
-' some code here to trigger continuation of the test, either read an input port or press any key to continue
-
-        LOCATE 15, 25: PRINT "Press any key to continue test.                  ";
-810     Inpt$ = INKEY$
-        CALL INPUTS
-        IF IB(1) <> 0 OR IB(2) <> 0 OR IB(3) <> 0 GOTO 815
-        IF Inpt$ = "" GOTO 810
-815     LOCATE 15, 25: PRINT "                               "
-
-Delay! = .2
-FOR J = 1 TO 5
-     LOCATE 23, 27
-     PRINT "Press [ESC] to stop testing"
-     IF INKEY$ = CHR$(27) THEN GOTO 1000
-
-       LOCATE 15, 52: : PRINT "Pass # "; : PRINT J
-       LOCATE 15, 63: PRINT "Delay "; : PRINT USING "#.##"; Delay!
-
-     REM**OUTPUT PORT TO BE TESTED IN A LOOP**
-       FOR PN = 4 TO 6
-
-     REM**INCREMENT DISPLAYED BIT NUMBER IN A LOOP
-       FOR N = 0 TO 7
-
-     REM**OUTPUT TEST STATUS TO MONITOR
-       LOCATE 15, 25: PRINT "PORT = "; PND$(PN); " BIT NUMBER = "; N
-
-
-     REM**SET UP TEST LED PATTERN
-       OB(PN) = 2 ^ N    'Number 2 raised to power N
-            LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
-            PRINT USING "####"; OB(4); : PRINT USING "####"; OB(5); : PRINT USING "####"; OB(6);
-     REM**OUTPUT LED DISPLAY DATA TO SMINI
-       CALL OUTPUTS
-
-     REM**DELAY LOOP SO CAN OBSERVE LED STATUS
-       GOSUB 890
-
-          REM *** ESCAPE KEY TRAP
-          IF INKEY$ = CHR$(27) THEN GOTO 1000
-
-       REM**COMPLETE BIT POSITION LOOP
-       NEXT N
-
-     REM**TURN OFF CURRENT PORT BEFORE INCREMENT TO THE NEXT PORT
-       OB(PN) = 0
-     REM**INCREMENT TO NEXT PORT
-       NEXT PN
-
-     REM reduce time delay
-       Delay! = Delay! - .05
-
-     LOCATE 23, 27
-
-NEXT J
-
-
-    REM TURN ON ALL SMINI LEDS
-        OB(4) = 255: OB(5) = 255: OB(6) = 255
-            LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
-            PRINT USING "####"; OB(4); : PRINT USING "####"; OB(5); : PRINT USING "####"; OB(6);
-
-        CALL OUTPUTS: Delay! = 5!: GOSUB 890
-
-   REM TURN OFF ALL SMINI LEDS
-       OB(4) = 0:  OB(5) = 0: OB(6) = 0
-            LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " OUTPUT BYTES =";
-            PRINT USING "####"; OB(4); : PRINT USING "####"; OB(5); : PRINT USING "####"; OB(6);
-
-       CALL OUTPUTS: Delay! = .5: GOSUB 890
-              
-        LOCATE 11, 25: PRINT "SMINI"; : PRINT USING "##"; UA; : PRINT " OUTPUT TEST COMPLETE!           "
-        LOCATE 13, 25: PRINT "                                            "
-     LOCATE 23, 27
-     PRINT "Press [ESC] to stop testing"
-     IF INKEY$ = CHR$(27) THEN GOTO 1000
-
-        IF Inpt$ = "" GOTO 820
-
-' some code here to trigger continuation of the test, either read an input port or press any key to continue
-
-        LOCATE 15, 25: PRINT "Press any key to continue test.                  ";
-820     Inpt$ = INKEY$
-        CALL INPUTS
-        IF IB(1) <> 0 OR IB(2) <> 0 OR IB(3) <> 0 GOTO 825
-        IF Inpt$ = "" GOTO 820
-825     LOCATE 15, 25: PRINT "                               "
-
-
-
-        LOCATE 15, 25: PRINT "Testing SMINI"; : PRINT USING "##"; UA; : PRINT " Inputs                         "
-
-840   LOCATE 22, 1: PRINT "SMINI#"; : PRINT USING "##"; UA; : PRINT " INPUT BYTES = ";
-850   CALL INPUTS  'Input bytes are stored as IB(1), IB(2), IB(3)
-      OB(1) = IB(1): OB(2) = IB(2): OB(3) = IB(3)
-      OB(4) = IB(1): OB(5) = IB(2): OB(6) = IB(3)
-       
-      LOCATE 22, 24: PRINT USING "####"; IB(1); : PRINT USING "####"; IB(2); : PRINT USING "####"; IB(3);
-
-      CALL OUTPUTS
-      IF IB(1) = 1 AND IB(3) = 128 THEN GOTO 1000
-     LOCATE 23, 27
-     PRINT "Press [ESC] to stop testing"
-     IF INKEY$ = CHR$(27) THEN GOTO 1000
-
-
-      GOTO 850
-
-
-890   REM **Real Time Delay loop variable DELAY! is the min time delay
-       Start! = TIMER
-900    Finish! = TIMER
-       IF Finish! - Start! < Delay! GOTO 900
-      RETURN
-1000
-
-
 
 END SUB
 
@@ -5704,7 +5500,7 @@ REM PACK SUSIC 0 Dispatcher CTC
                CALL OUTPUTS
 
 
-REM PACK SUSIC1 DeCoursey Yard
+REM PACK SUSIC 1 DeCoursey Yard
                 ' CARD #1, 4 outputs
 
                OB(1) = SM(101)
@@ -5811,30 +5607,39 @@ REM PACK SUSIC1 DeCoursey Yard
 
   END IF
 
-               UA = 16: NI = 16: NO = 20: REM NS = 4: CT(1) = 255
+               UA = 1: NI = 16: NO = 20: REM NS = 4: CT(1) = 255
                CALL OUTPUTS
 
-REM PACK SMINI#1 SWITCH MOTORS & SIGNALS for Walton & N Worthville
+REM PACK SMINI#16 SWITCH MOTORS & SIGNALS for Walton & N Worthville
                
                
                OB(1) = SM(49) * B0 OR OB(1)
                OB(1) = SM(47) * B2 OR OB(1)
                OB(1) = SM(37) * B4 OR OB(1): 'N Worthville. It was a short wire run over the isle.
                
-               OB(2) = SIGR(48)
+               OB(2) = SIGR(48) * BO OR OB(2)
                OB(2) = LED(49) * B6 OR OB(2)
                OB(2) = LED(47) * B7 OR OB(2)
                
-               OB(3) = SIGL(49) * B0 OR OB(3): ' swapped 48 & 49 here Mark wired backwards
-               OB(3) = SIGL(48) * B3 OR OB(3)
+               OB(3) = SIGL(48) * B0 OR OB(3)
+               OB(3) = SIGL(49) * B3 OR OB(3)
                OB(3) = LED(37) * B6 OR OB(3)
+               OB(3) = 0 * B7 OR OB(3)
 
-               OB(4) = 0
-               OB(5) = 0
-               OB(6) = 0
+               OB(4) = SM(49) * B0 OR OB(4)
+               OB(4) = SM(47) * B2 OR OB(4)
+               OB(4) = SM(37) * B4 OR OB(4): 'N Worthville. It was a short wire run over the isle.
 
-                              
-               UA = 1: NI = 3: NO = 6: REM NS = 4: CT(1) = 255
+               OB(5) = SIGR(48) * BO OR OB(5)
+               OB(5) = LED(49) * B6 OR OB(5)
+               OB(5) = LED(47) * B7 OR OB(5)
+
+               OB(6) = SIGL(48) * B0 OR OB(5)
+               OB(6) = SIGL(49) * B3 OR OB(5)
+               OB(6) = LED(37) * B6 OR OB(5)
+               OB(6) = 0 * B7 OR OB(5)
+
+               UA = 16: NI = 3: NO = 6: REM NS = 4: CT(1) = 255
 
                CALL OUTPUTS
 
